@@ -20,9 +20,10 @@ output is not "SUCCESS" but "reproduced in 3 of 3 attempts, judge confidence 0.9
 LLM agents are good at following the steps in a bug report. They are much worse at telling you
 whether the bug actually happened. The same model that performs the actions also grades its own
 work, and it grades generously: it reaches the end of the reproduction steps without crashing and
-declares victory. Published work in this area has had to audit its own results by hand and demote
-a meaningful fraction of claimed successes, and a widely cited baseline turns out to have no
-oracle at all, so it marks a step it cannot perform as missing and carries on regardless.
+declares victory. The literature is candid about this: reported reproduction rates in this area
+often rest on a manual audit of the agent's own claims, and the failure modes that audit catches
+are exactly the subtle ones, a step that silently did nothing, or a symptom nobody actually
+looked for.
 
 Manual auditing does not scale and it is not a property of the system. ARBITER makes the audit
 architectural:
@@ -333,7 +334,7 @@ Stated plainly, because a results table without these is not worth much:
 - **Free-tier rate limits shaped the run.** ARBITER paces itself with `--rpm` and stops with a
   clear message after three consecutive exhausted calls rather than grinding through backoff.
   Unresolved trials always count as non-reproductions, never as successes.
-- **Ten reports is a small benchmark.** The rates below have wide error bars. The infrastructure
+- **Ten reports is a small benchmark.** The rates above have wide error bars. The infrastructure
   is built to scale to more cases, the cases themselves are the work.
 - **The overlap signal is noisier than the other two.** Visible in the published report: on
   `drawer-jank` the DOM oracle reports the open drawer covering the button behind it, which is
@@ -351,11 +352,16 @@ Stated plainly, because a results table without these is not worth much:
 
 - Feng and Chen, *Prompting Is All You Need: Automated Android Bug Replay with Large Language
   Models* (AdbGPT), ICSE 2024.
-- Huang et al., *Crashtranslator / ReBL* line of work on LLM-driven Android bug reproduction,
-  ISSTA 2024, which documents both the custom-view and non-crash oracle failure modes that
-  motivated ARBITER's oracle design.
-- Just et al., *Defects4J: A Database of Existing Faults to Enable Controlled Testing Studies for
-  Java Programs*, ISSTA 2014, for the seeded-benchmark methodology.
+- Wang, Zhao, Feng, Zhang, Halfond, Chen, Sun, Shi and Yu, *Feedback-Driven Automated Whole Bug
+  Report Reproduction for Android Apps* (ReBL), ISSTA 2024. Its section on failed reproductions
+  is what pointed me at the two oracle gaps ARBITER attacks: UI elements that the accessibility
+  hierarchy cannot see, and non-crash symptoms subtle enough that an agent concludes success
+  without ever observing them.
+- Just, Jalali and Ernst, *Defects4J: A Database of Existing Faults to Enable Controlled Testing
+  Studies for Java Programs*, ISSTA 2014, for the seeded-benchmark methodology.
+
+These informed the design. ARBITER targets web applications rather than Android, so it is not a
+comparison against any of them and no numbers here should be read against theirs.
 
 ## License
 
