@@ -13,7 +13,7 @@ from .agent import Actor
 from .benchmark import load_suite
 from .config import RunConfig, key_for
 from .judge import Judge
-from .llm.base import build_provider
+from .llm.base import QuotaExhausted, build_provider
 from .llm.mock import RecordingProvider
 from .models import (AGREED_NOT_REPRODUCED, CONFIRMED, DISPUTED, INCONCLUSIVE,
                      NOT_REPRODUCED, REJECTED, REPRODUCED, UNRESOLVED, BugResult,
@@ -117,7 +117,7 @@ def run_trial(spec: BugSpec, cfg: RunConfig, server: BenchmarkServer, index: int
         outcome=outcome, steps=steps, signals=signals,
         actor_usage=actor_usage, judge_usage=judge_result.usage,
         duration_s=round(time.time() - started, 2), evidence_dir=evidence_dir,
-        error=error or judge_result.error)
+        final_state=final_state, error=error or judge_result.error)
 
     with open(os.path.join(evidence_dir, "trial.json"), "w", encoding="utf-8") as fh:
         fh.write(dumps(trial))
@@ -144,12 +144,27 @@ def run_suite(cfg: RunConfig) -> SuiteResult:
                       started_at=time.strftime("%Y-%m-%d %H:%M:%S"))
     print("ARBITER: {0} bug report(s), {1} trial(s) each".format(len(specs), cfg.trials))
     print("  actor {0}   judge {1}".format(out.config["actor"], out.config["judge"]))
+    print("  pacing at {0:.0f} requests per minute".format(cfg.rpm))
     with BenchmarkServer(cfg.apps_dir) as server:
         print("  benchmark served from {0}\n".format(server.url_for("")))
         for spec in specs:
             tag = "control" if spec.control else spec.category
             print("  {0}  [{1}]".format(spec.id, tag))
-            out.results.append(run_bug(spec, cfg, server))
+            try:
+                out.results.append(run_bug(spec, cfg, server))
+            except KeyboardInterrupt:
+                print("\n  interrupted. Reporting on the {0} report(s) already "
+                      "completed.".format(len(out.results)))
+                break
+            except QuotaExhausted as exc:
+                print("\n  {0}\n  Reporting on the {1} report(s) already completed.".format(
+                    exc, len(out.results)))
+                break
+            except Exception as exc:      # one bad report should not destroy a long run
+                print("    {0} failed: {1}: {2}".format(spec.id, type(exc).__name__,
+                                                        str(exc)[:200]))
+                if not out.results:
+                    raise
     out.finished_at = time.strftime("%Y-%m-%d %H:%M:%S")
     out.duration_s = round(time.time() - started, 1)
     return out
@@ -182,7 +197,9 @@ def metrics(suite: SuiteResult) -> Dict[str, object]:
         "judge_rejected": sum(1 for t in trials if t.outcome == REJECTED),
         "judge_disputed": sum(1 for t in trials if t.outcome == DISPUTED),
         "unresolved": sum(1 for t in trials if t.outcome == UNRESOLVED),
-        "overclaim_rate": round((claimed - confirmed) / claimed, 3) if claimed else 0.0,
+        "overclaim_rate": round(sum(1 for t in trials if t.outcome == REJECTED) / claimed, 3)
+                          if claimed else 0.0,
+        "unconfirmed_rate": round((claimed - confirmed) / claimed, 3) if claimed else 0.0,
         "deterministic": sum(1 for r in suite.results if r.stability == "deterministic"),
         "flaky": sum(1 for r in suite.results if r.stability in ("flaky", "rare")),
         "cost": cost_mod.summarise(usages),

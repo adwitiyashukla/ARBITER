@@ -1,0 +1,10 @@
+{
+  "fingerprint": "97ea7c4de1701c6e",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\n \"verdict\": \"NOT_REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Typing 'ADA' successfully filters the list and shows 'Ada Lovelace'.\",\n \"evidence\": [\n  \"DOM state delta shows '1 of 5 shown' and lists 'Ada Lovelace' when searching for 'ADA'.\",\n  \"Screenshot 2 clearly shows 'Ada Lovelace' listed under the search query 'ADA'.\"\n ],\n \"reasoning\": \"The bug report claims that searching with uppercase letters returns an empty list. However, the objective instrumentation and screenshot prove that typing 'ADA' correctly returns the matching result ('Ada Lovelace'). Therefore, the bug is not present.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2800,
+    "completion_tokens": 162
+  }
+}

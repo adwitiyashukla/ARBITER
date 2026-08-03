@@ -1,0 +1,10 @@
+{
+  "fingerprint": "1c51eaa47f3ce2a2",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "The bug is successfully reproduced: after clicking the suggested contact, the chip \"John Baker\" was added, but the typed fragment \"Joh\" remained in the input box.\n\n```json\n{\n  \"action\": \"finish\",\n  \"verdict\": \"REPRODUCED\",\n  \"reason\": \"The contact chip 'John Baker' was added to the To field, but the typed text 'Joh' remained inside the input box as described in the bug report.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2396,
+    "completion_tokens": 101
+  }
+}

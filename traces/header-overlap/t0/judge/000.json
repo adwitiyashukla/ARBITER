@@ -1,0 +1,10 @@
+{
+  "fingerprint": "76a2831fbfc9abdd",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "```json\n{\n \"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The dark top bar clearly overlaps and hides the top portion of the first card on the narrow window.\",\n \"evidence\": [\n  \"Screenshot 1 shows the dark top bar ('Dashboard') positioned directly over the first card, cutting off its top border and text area.\"\n ],\n \"reasoning\": \"The attached screenshot clearly demonstrates the reported layout defect: the dark header bar is positioned with fixed or absolute styling such that it overlays the content area, causing the top card to be partially hidden underneath it.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 1608,
+    "completion_tokens": 139
+  }
+}

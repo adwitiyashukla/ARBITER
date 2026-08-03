@@ -1,0 +1,10 @@
+{
+  "fingerprint": "4a71293fd2c54e51",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\n \"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The side menu opening transition advanced in discrete jumps with still frames rather than a smooth slide.\",\n \"evidence\": [\n  \"visual.stepped_animation signal recording that the transition advanced in 3 discrete jumps with 2 still frame(s) in between\",\n  \"67% of all pixel change arrived in 2 frames\"\n ],\n \"reasoning\": \"The objective instrumentation explicitly captured the stepped animation artifact described in the bug report, noting that the transition advanced in discrete jumps with still frames rather than a smooth slide.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2902,
+    "completion_tokens": 146
+  }
+}

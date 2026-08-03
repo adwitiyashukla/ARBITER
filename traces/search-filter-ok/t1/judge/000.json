@@ -1,0 +1,10 @@
+{
+  "fingerprint": "b492c49249cbe3f5",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\n \"verdict\": \"NOT_REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Typing 'ADA' in capital letters successfully filters the list and shows Ada Lovelace.\",\n \"evidence\": [\n  \"dom.state_delta shows text_changed: '5 of 5 shown' -> '1 of 5 shown' and li#person updated to 'Ada Lovelace' after typing 'ADA'\",\n  \"attached screenshot 2 shows 'ADA' in the search box and 'Ada Lovelace' listed in the results\"\n ],\n \"reasoning\": \"The bug report claims that typing 'ADA' in capitals returns an empty list. However, both the DOM state delta and the second screenshot clearly show that typing 'ADA' successfully filters the directory to display 'Ada Lovelace'.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2800,
+    "completion_tokens": 184
+  }
+}

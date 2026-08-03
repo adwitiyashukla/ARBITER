@@ -1,0 +1,10 @@
+{
+  "fingerprint": "5da19bcb29eadfb9",
+  "model": "gemini-3.5-flash-lite",
+  "images": 3,
+  "text": "```json\n{\"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Typed text fragment 'Joh' remains in the input field after selecting a suggested contact 'John Baker'.\",\n \"evidence\": [\"Action 2 clicked the suggestion and added span#chip 'John Baker'\", \"Screenshot 3 clearly shows both the chip 'John Baker' and the text 'Joh' remaining in the input box\", \"DOM state delta after step 1 shows input value changed to 'Joh' and it was not cleared after selecting the suggestion\"],\n \"reasoning\": \"The bug report describes typing a fragment, picking a suggestion, and having the typed fragment remain in the input box. Both the final screenshot (Screenshot 3) and the DOM state confirm that the text 'Joh' remains inside the input box alongside the newly added contact chip.\"}\n```",
+  "usage": {
+    "prompt_tokens": 3933,
+    "completion_tokens": 186
+  }
+}

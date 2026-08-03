@@ -1,0 +1,10 @@
+{
+  "fingerprint": "76a2831fbfc9abdd",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "```json\n{\n \"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The dark top bar clearly overlaps and hides the top portion of the first dashboard card.\",\n \"evidence\": [\n  \"Attached screenshot 1 shows the dark top bar ('Dashboard', 'Analytics workspace for the current quarter') positioned directly over the first white card, cutting off its top border and hiding the header text.\"\n ],\n \"reasoning\": \"The bug report states that on a narrow window the dark top bar sits on top of the first card and hides part of it. The screenshot clearly displays this exact overlapping behavior where the dark header is overlaid on the content card.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 1608,
+    "completion_tokens": 153
+  }
+}

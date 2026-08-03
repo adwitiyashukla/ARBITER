@@ -1,0 +1,10 @@
+{
+  "fingerprint": "ff4b0462ed9f785c",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "The bug report states that double-clicking the Submit button files the same feedback twice, resulting in two identical entries. We tested this by double-clicking the submit button, and indeed observed two identical entries appearing in the submitted list.\n\n```json\n{\"action\": \"finish\", \"verdict\": \"REPRODUCED\", \"reason\": \"Double clicking the Submit button created two identical entries in the submitted list on screen.\"}\n```",
+  "usage": {
+    "prompt_tokens": 2413,
+    "completion_tokens": 88
+  }
+}

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from . import prompts
 from .actions import extract_json_block
-from .llm.base import LLMError, LLMProvider
+from .llm.base import LLMError, LLMProvider, QuotaExhausted
 from .models import INCONCLUSIVE, NOT_REPRODUCED, REPRODUCED, Signal, StepRecord, Usage
 
 MAX_IMAGES = 4
@@ -90,6 +90,8 @@ class Judge:
         system, user, images, _ = build_payload(report, steps, signals, final_state, evidence_dir)
         try:
             reply = self.provider.complete(system, user, images)
+        except QuotaExhausted:
+            raise
         except LLMError as exc:
             return JudgeVerdict(error=str(exc), reasoning="judge could not be reached")
         v = parse_verdict(reply.text)

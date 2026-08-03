@@ -1,0 +1,10 @@
+{
+  "fingerprint": "817012356e05db4e",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "To test the bug, let's tick the \"Enable advanced export\" checkbox (element #1) and observe if the dropdowns become enabled.\n\n```json\n{\"action\": \"click\", \"ref\": 1}\n```",
+  "usage": {
+    "prompt_tokens": 2575,
+    "completion_tokens": 48
+  }
+}

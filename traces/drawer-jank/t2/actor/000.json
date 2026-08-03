@@ -1,0 +1,10 @@
+{
+  "fingerprint": "785506c9f05b2b21",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "To test the bug report, I will click the \"Open menu\" button to observe the side menu opening animation.\n\n```json\n{\"action\": \"click\", \"ref\": 1}\n```",
+  "usage": {
+    "prompt_tokens": 2353,
+    "completion_tokens": 41
+  }
+}

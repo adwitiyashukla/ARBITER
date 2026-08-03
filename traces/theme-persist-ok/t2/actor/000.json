@@ -1,0 +1,10 @@
+{
+  "fingerprint": "bf01835bdb4dfe4e",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "To reproduce the bug, I will tick the \"Dark mode\" checkbox, click on the Profile tab, and then click back on the Home tab.\n\n```json\n{\"action\": \"check\", \"ref\": 1}\n```",
+  "usage": {
+    "prompt_tokens": 2316,
+    "completion_tokens": 48
+  }
+}

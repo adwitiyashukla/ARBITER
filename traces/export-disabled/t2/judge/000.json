@@ -1,0 +1,10 @@
+{
+  "fingerprint": "2d932773781f0f90",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\n \"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The advanced export option checkbox is ticked, but the four dropdowns remain greyed out and disabled.\",\n \"evidence\": [\n  \"Action 1 clicked the 'Enable advanced export' checkbox, which is now checked in the second screenshot.\",\n  \"Objective signal dom.disabled_elements recorded that select#fmt, select#range, select#enc, and select#cols remain disabled after ticking the checkbox.\",\n  \"The second screenshot shows the four dropdowns (Format, Date range, Encoding, Columns) still appearing greyed out despite the checkbox being enabled.\"\n ],\n \"reasoning\": \"The reproduction steps were executed by ticking the 'Enable advanced export' checkbox. Both the DOM instrumentation and the final screenshot confirm that the four export option dropdowns remained disabled and greyed out, directly matching the symptom described in the bug report.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2820,
+    "completion_tokens": 208
+  }
+}

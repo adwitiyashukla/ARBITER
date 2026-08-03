@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from . import actions as action_mod
 from . import perception, prompts
-from .llm.base import LLMError, LLMProvider
+from .llm.base import LLMError, LLMProvider, QuotaExhausted
 from .models import (INCONCLUSIVE, NOT_REPRODUCED, REPRODUCED, Action, BugSpec,
                      Signal, StepRecord, Usage)
 from .oracle import CrashOracle, DomOracle, VisualOracle
@@ -86,7 +86,7 @@ class Actor:
 
             snap, raw_png = self.driver.snapshot()
             new_elements = snap.get("elements", [])
-            step_signals += self.dom.inspect(step, elements, new_elements)
+            step_signals += self.dom.inspect(step, elements, new_elements, snap.get("viewport"))
 
             shot_path = self._save("step{0:02d}_screen.png".format(step + 1), raw_png)
             self.steps.append(StepRecord(step, self.driver.url, action, result,
@@ -105,6 +105,8 @@ class Actor:
         for attempt in range(MAX_PARSE_RETRIES + 1):
             try:
                 reply = self.provider.complete(prompts.actor_system(), message, [image])
+            except QuotaExhausted:
+                raise
             except LLMError as exc:
                 print("    [actor] provider error: {0}".format(exc))
                 return None

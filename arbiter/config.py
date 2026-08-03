@@ -7,9 +7,9 @@ from typing import Dict, Optional
 
 DEFAULTS = {
     "provider": "gemini",
-    "actor_model": "gemini-3.6-flash",
+    "actor_model": "gemini-3.5-flash-lite",
     "judge_provider": "",              # empty means: same provider as the actor
-    "judge_model": "gemini-3.6-flash",
+    "judge_model": "gemini-3.5-flash",
     "trials": 3,
 }
 
@@ -48,6 +48,7 @@ class RunConfig:
     judge_provider: str = DEFAULTS["judge_provider"]
     judge_model: str = DEFAULTS["judge_model"]
     trials: int = DEFAULTS["trials"]
+    rpm: float = 12.0
     headless: bool = True
     record: bool = False
     video: bool = False
@@ -68,5 +69,6 @@ class RunConfig:
             "actor": "{0}:{1}".format(self.provider, self.actor_model),
             "judge": "{0}:{1}".format(self.effective_judge_provider, self.judge_model),
             "trials_per_bug": self.trials,
+            "rpm": self.rpm,
             "headless": self.headless,
         }

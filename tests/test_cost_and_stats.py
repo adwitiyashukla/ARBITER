@@ -95,3 +95,53 @@ def test_request_retry_gives_up_and_returns_last_response():
     base.BASE_BACKOFF_S = 0.001
     out = base.request_with_retry(lambda: Resp(), "test")
     assert out.status_code == 429
+
+
+def test_rate_limiter_spaces_calls():
+    import time
+    import arbiter.llm.base as base
+
+    class Resp:
+        status_code = 200
+        headers = {}
+
+    base.set_rate_limit(600)          # 100 ms apart
+    base._last_call_at = 0.0
+    start = time.monotonic()
+    for _ in range(3):
+        base.request_with_retry(lambda: Resp(), "test")
+    elapsed = time.monotonic() - start
+    base.set_rate_limit(0)
+    assert elapsed >= 0.18, "three paced calls should take at least two intervals"
+
+
+def test_circuit_breaker_trips_after_repeated_exhaustion():
+    import arbiter.llm.base as base
+
+    class Resp:
+        status_code = 429
+        headers = {}
+
+    base.BASE_BACKOFF_S = 0.001
+    base._consecutive_exhaustions = 0
+    for _ in range(base.CONSECUTIVE_FAILURE_LIMIT - 1):
+        base.request_with_retry(lambda: Resp(), "test")
+    try:
+        base.request_with_retry(lambda: Resp(), "test")
+    except base.QuotaExhausted as exc:
+        assert "quota" in str(exc).lower()
+    else:
+        raise AssertionError("expected QuotaExhausted after repeated exhaustion")
+    base._consecutive_exhaustions = 0
+
+
+def test_success_resets_the_circuit_breaker():
+    import arbiter.llm.base as base
+
+    class Ok:
+        status_code = 200
+        headers = {}
+
+    base._consecutive_exhaustions = 2
+    base.request_with_retry(lambda: Ok(), "test")
+    assert base._consecutive_exhaustions == 0

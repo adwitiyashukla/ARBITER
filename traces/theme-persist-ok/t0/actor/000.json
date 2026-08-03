@@ -1,0 +1,10 @@
+{
+  "fingerprint": "bf01835bdb4dfe4e",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "To follow the reproduction steps, I will first tick the \"Dark mode\" checkbox.\n\n```json\n{\"action\": \"check\", \"ref\": 1}\n```",
+  "usage": {
+    "prompt_tokens": 2316,
+    "completion_tokens": 35
+  }
+}

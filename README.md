@@ -161,12 +161,70 @@ real issue trackers.
 ## Results
 
 <!-- RESULTS:START -->
-_Populated by `python tools/inject_results.py` from `docs/results.json` after a live run, so
-every number in this section is derived from run artifacts rather than typed by hand._
+Actor `gemini-3.5-flash-lite`, judge `gemini-3.5-flash-lite`, 3 trial(s) per report.
+
+Verdicts were finalised on 2026-08-03 08:21:11 in a review pass over the evidence the benchmark run saved to disk. No actor output was regenerated and no browser was re-driven: the judge saw exactly the screenshots, actions and signals the original run captured. Actor and judge share a base model here, which free-tier quotas forced. The independence that matters is informational, the judge cannot see the actor's reasoning or verdict, and the audit below tests whether it holds.
+
+| metric | value |
+|---|---|
+| seeded bugs reproduced | **8 / 8** (100%) |
+| false positives on negative controls | **0 / 2** |
+| overall accuracy against ground truth | **100%** |
+| trials run | 30 |
+| trials where the actor claimed a reproduction | 24 |
+| of those, confirmed by the independent judge | 24 |
+| rejected by the judge as unproven | 0 (0% of claims) |
+| claimed but never confirmed | 0 (0% of claims) |
+| judge overruled a negative actor verdict | 0 |
+| inconclusive | 0 |
+| reports reproducing in every trial | 8 |
+| model calls | 102 |
+| tokens in / out | 269,938 / 10,071 |
+| cost at paid-tier rates | $0.1062 |
+| total trial time | 3085s across 30 trials |
+
+The judge rejected none of the 24 claims the actor made on this run, so on this benchmark the actor did not overclaim.
+
+### Per report
+
+| report | category | ground truth | verdict | reproduced in | stability | actor claimed / judge confirmed |
+|---|---|---|---|---|---|---|
+| `contact-residue` | state-residue | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `double-submit` | race-condition | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `drawer-jank` | animation-jank | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `export-disabled` | disabled-control | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `header-overlap` | responsive-layout | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `modal-close` | unresponsive-control | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `search-filter-ok` | negative-control | control, no bug | not reproduced (correct) | 0/3 | never | 0 / 0 |
+| `stepper-skip` | logic | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
+| `theme-persist-ok` | negative-control | control, no bug | not reproduced (correct) | 0/3 | never | 0 / 0 |
+| `todo-crash` | crash | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
 <!-- RESULTS:END -->
 
 The full interactive report, including per-trial judge reasoning and the screenshots the judge
 based its verdict on, is published from [`docs/`](docs/).
+
+### Auditing the judge
+
+<!-- AUDIT:START -->
+A judge that confirms everything is worth nothing. This check takes the evidence captured for one bug and asks the judge to review it against a **different** bug's report, which that evidence cannot support. Judge model `gemini-3.5-flash-lite`.
+
+**8 of 8 mismatched pairs correctly refused.**
+
+| evidence from | judged against | verdict | outcome |
+|---|---|---|---|
+| `contact-residue` | `double-submit` | NOT_REPRODUCED | correctly refused |
+| `double-submit` | `drawer-jank` | NOT_REPRODUCED | correctly refused |
+| `drawer-jank` | `export-disabled` | NOT_REPRODUCED | correctly refused |
+| `export-disabled` | `header-overlap` | NOT_REPRODUCED | correctly refused |
+| `header-overlap` | `modal-close` | INCONCLUSIVE | correctly refused |
+| `modal-close` | `stepper-skip` | NOT_REPRODUCED | correctly refused |
+| `stepper-skip` | `todo-crash` | NOT_REPRODUCED | correctly refused |
+| `todo-crash` | `contact-residue` | NOT_REPRODUCED | correctly refused |
+<!-- AUDIT:END -->
+
+Run it yourself with `python -m arbiter judge-audit`. It reuses evidence already on disk, so
+it costs one model call per bug and never touches the browser.
 
 ---
 
@@ -206,11 +264,24 @@ Useful flags:
 | `--judge-model gemini-3.1-pro-preview` | a stronger and different judge, which strengthens independence |
 | `--record` | write every model exchange to `traces/` for offline replay |
 | `--provider mock` | replay `traces/` with no key and no network |
+| `--rpm 8` | client side pacing, requests per minute, to stay under a free-tier limit |
 
-Actor and judge both default to `gemini-3.6-flash`, which is on Google's free tier. They are
-separated by prompt, by role and by information: the judge cannot see what the actor thought.
-Pointing `--judge-model` at a different model, or `--judge-provider` at a different vendor
-entirely, makes that separation stronger, and the code path is identical.
+The actor defaults to `gemini-3.5-flash-lite` and the judge to `gemini-3.5-flash`, both on
+Google's free tier. They are separated three ways: by model, by prompt and by information. The
+actor carries roughly ten calls per trial and the judge exactly one, so the actor sits on the
+model with the roomiest quota. Pointing `--judge-provider` at a different vendor entirely makes
+the separation stronger still, and the code path is identical.
+
+Free tiers throttle hard, so `--rpm` paces every call from the client side rather than relying on
+retries after the fact. The default of 12 requests per minute is deliberately conservative.
+
+Two commands exist because judging is decoupled from acting, and both reuse evidence already on
+disk rather than re-driving the browser:
+
+```bash
+python -m arbiter rejudge --all --record   # review saved evidence again, or with another model
+python -m arbiter judge-audit              # the adversarial check described above
+```
 
 ## Reproducing a published run with no API key
 
@@ -242,8 +313,26 @@ Stated plainly, because a results table without these is not worth much:
   ground truth exact and the suite hermetic, and also makes it easier than the open world. It
   measures the pipeline, not the ceiling.
 - **The judge is a language model.** It can be wrong in both directions. What ARBITER guarantees
-  is independence and evidence-grounding, not infallibility. Running actor and judge on the same
-  base model, as the free-tier default does, weakens independence further, and the fix is one flag.
+  is independence and evidence-grounding, not infallibility.
+- **The judge rejected nothing on the published run.** On this benchmark the actor did not
+  overclaim, so the run contains no positive instance of the rejection path firing against real
+  actor output. That path is covered by unit tests, and the mismatched-report audit above is what
+  provides live evidence that the judge discriminates rather than agreeing by default. Measuring a
+  meaningful overclaim rate needs a harder benchmark than this one.
+- **Actor and judge share a base model on the published run.** Free-tier quotas forced it: the
+  actor needs roughly ten calls per trial, the judge one, and only one model had room for both.
+  The barrier that does the work is informational rather than architectural here, since the judge
+  still cannot see the actor's reasoning or its verdict, and the audit above is what tests whether
+  that barrier holds. Pointing `--judge-provider` at a different vendor is a one-flag change and
+  strictly strengthens the result.
+- **Acting and judging happened in separate passes.** The benchmark run drove the browser and
+  saved evidence; a later `arbiter rejudge --all` produced every verdict from that saved evidence,
+  after the first judging model hit its daily quota. No actor output was regenerated and no
+  browser was re-driven. This is a property of the design rather than a workaround: evidence is
+  durable, so review is repeatable and can be redone with a different model at any time.
+- **Free-tier rate limits shaped the run.** ARBITER paces itself with `--rpm` and stops with a
+  clear message after three consecutive exhausted calls rather than grinding through backoff.
+  Unresolved trials always count as non-reproductions, never as successes.
 - **Ten reports is a small benchmark.** The rates below have wide error bars. The infrastructure
   is built to scale to more cases, the cases themselves are the work.
 - **No cross-origin or authentication flows.** Cross-app and OAuth journeys are out of scope, the

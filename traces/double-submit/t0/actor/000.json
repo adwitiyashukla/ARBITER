@@ -1,0 +1,10 @@
+{
+  "fingerprint": "6ce791cc44b86cf2",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "To test whether a fast double-click on the submit button files the feedback twice, I will double-click the Submit button.\n\n```json\n{\"action\": \"double_click\", \"ref\": 3}\n```",
+  "usage": {
+    "prompt_tokens": 2262,
+    "completion_tokens": 46
+  }
+}

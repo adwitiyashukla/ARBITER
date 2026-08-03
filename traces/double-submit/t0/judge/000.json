@@ -1,0 +1,10 @@
+{
+  "fingerprint": "32e1db7810c5c372",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\n \"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Double clicking the Submit button created two identical feedback entries in the submitted list and updated the count to '2 entries'.\",\n \"evidence\": [\n  \"Action: double_click(ref=3) on the Submit button\",\n  \"DOM signal: text_changed: p#count: '0 entries' -> '2 entries'\",\n  \"Screenshot 2: shows two identical 'Great product' entries under Submitted and '2 entries' text.\"\n ],\n \"reasoning\": \"The bug report describes how a fast double click on the Submit button records the feedback twice. The action log shows a double click was performed, the DOM state delta and final screenshot clearly show two identical 'Great product' items added to the list and '2 entries' displayed.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2730,
+    "completion_tokens": 193
+  }
+}

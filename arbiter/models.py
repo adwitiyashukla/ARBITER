@@ -107,6 +107,7 @@ class TrialResult:
     judge_usage: Usage
     duration_s: float
     evidence_dir: str
+    final_state: str = ""
     error: str = ""
 
     @property

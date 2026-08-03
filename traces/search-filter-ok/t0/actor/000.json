@@ -1,0 +1,10 @@
+{
+  "fingerprint": "0388bdab515e0963",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "I will type \"ADA\" into the search box to test the reported bug.\n\n```json\n{\"action\": \"type\", \"ref\": 2, \"text\": \"ADA\"}\n```",
+  "usage": {
+    "prompt_tokens": 2397,
+    "completion_tokens": 40
+  }
+}

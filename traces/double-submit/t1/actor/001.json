@@ -1,0 +1,10 @@
+{
+  "fingerprint": "ff4b0462ed9f785c",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "Double clicking the submit button created two identical feedback entries on the page (\"2 entries\"), reproducing the bug as described.\n\n```json\n{\"action\": \"finish\", \"verdict\": \"REPRODUCED\", \"reason\": \"Double clicking the Submit button quickly added two identical feedback entries to the submitted list, resulting in '2 entries'.\"}\n```",
+  "usage": {
+    "prompt_tokens": 2413,
+    "completion_tokens": 71
+  }
+}

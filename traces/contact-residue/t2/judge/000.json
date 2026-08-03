@@ -1,0 +1,10 @@
+{
+  "fingerprint": "19a38e544a203162",
+  "model": "gemini-3.5-flash-lite",
+  "images": 3,
+  "text": "```json\n{\"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The typed fragment 'Joh' remains in the input field after selecting the suggested contact 'John Baker'.\",\n \"evidence\": [\"Action 2: click(ref=3) selected the suggestion\", \"Attached screenshot 3 clearly shows the chip 'John Baker' added above the input field while the text 'Joh' remains inside the input box.\"],\n \"reasoning\": \"The bug report describes an issue where typing a partial name and picking a suggestion leaves the typed letters in the input box alongside the created contact chip. Screenshot 3 and the action execution log verify that after clicking the suggestion 'John Baker', the chip appears but 'Joh' remains in the input field.\"}\n```",
+  "usage": {
+    "prompt_tokens": 3960,
+    "completion_tokens": 169
+  }
+}

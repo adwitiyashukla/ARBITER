@@ -1,0 +1,10 @@
+{
+  "fingerprint": "7241e5bcf9c7982f",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "After ticking the \"Enable advanced export\" checkbox, the four select elements (format, date range, encoding, and columns) remain disabled, confirming the bug.\n\n```json\n{\"action\": \"finish\", \"verdict\": \"REPRODUCED\", \"reason\": \"Ticking the 'Enable advanced export' checkbox leaves the format, date range, encoding, and columns dropdowns greyed out and disabled.\"}\n```",
+  "usage": {
+    "prompt_tokens": 2698,
+    "completion_tokens": 86
+  }
+}

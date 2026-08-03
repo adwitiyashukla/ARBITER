@@ -1,0 +1,10 @@
+{
+  "fingerprint": "2f3867c66d5a093a",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "I will now click on the suggested contact \"John Baker\" to test if the typed fragment \"Joh\" remains in the input field.\n\n```json\n{\"action\": \"click\", \"ref\": 3}\n```",
+  "usage": {
+    "prompt_tokens": 2471,
+    "completion_tokens": 45
+  }
+}

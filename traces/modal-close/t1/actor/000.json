@@ -1,0 +1,10 @@
+{
+  "fingerprint": "4e0e34c0edf7ce3c",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "To follow the reproduction steps, I will first click the \"Open settings\" button to open the settings dialog.\n\n```json\n{\"action\": \"click\", \"ref\": 1}\n```",
+  "usage": {
+    "prompt_tokens": 2158,
+    "completion_tokens": 40
+  }
+}

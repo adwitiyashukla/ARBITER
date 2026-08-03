@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 OVERLAP_MIN_RATIO = 0.15     # fraction of an element that must be covered to count
+FULLSCREEN_RATIO = 0.60      # a pinned element bigger than this is a backdrop, not a bar
 MAX_DELTA_ITEMS = 12         # keep prompts bounded
 
 
@@ -68,10 +69,21 @@ def state_delta(before: List[Dict[str, Any]], after: List[Dict[str, Any]]) -> Di
     return delta
 
 
-def find_overlaps(elements: List[Dict[str, Any]]) -> List[Tuple[str, str, float]]:
-    """Pinned elements that visually cover unrelated content."""
+def find_overlaps(elements: List[Dict[str, Any]],
+                  viewport: Optional[Dict[str, Any]] = None) -> List[Tuple[str, str, float]]:
+    """Pinned elements that visually cover unrelated content.
+
+    Two exclusions keep this honest. Elements related by ancestry are skipped, since a
+    header naturally sits on top of its own logo. Pinned elements that fill most of the
+    viewport are skipped too: a modal backdrop covering the page is doing its job, and
+    reporting it would hand the judge a misleading signal on every dialog.
+    """
     out = []
     pinned = [e for e in elements if e.get("fixed") and _area(e.get("rect", {})) > 0]
+    if viewport:
+        screen = float(viewport.get("width", 0)) * float(viewport.get("height", 0))
+        if screen > 0:
+            pinned = [e for e in pinned if _area(e["rect"]) < FULLSCREEN_RATIO * screen]
     others = [e for e in elements if not e.get("fixed") and (e.get("text") or "").strip()
               and _area(e.get("rect", {})) > 0]
     for f in pinned:
@@ -80,8 +92,10 @@ def find_overlaps(elements: List[Dict[str, Any]]) -> List[Tuple[str, str, float]
             ep = e.get("path", "")
             if fp and ep and (ep.startswith(fp) or fp.startswith(ep)):
                 continue                                    # ancestor or descendant
-            if _contains(f["rect"], e["rect"]) or _contains(e["rect"], f["rect"]):
-                continue                                    # containment, not a collision
+            if _contains(e["rect"], f["rect"]):
+                continue        # the content wraps the pinned element, so nothing is hidden
+            # Note the asymmetry: a pinned bar that completely swallows a heading is the
+            # worst case of covering, not a reason to skip it.
             inter = _intersection(f["rect"], e["rect"])
             if inter <= 0:
                 continue
@@ -99,7 +113,8 @@ class DomOracle:
     source = "dom"
 
     def inspect(self, step: int, before: Optional[List[Dict[str, Any]]],
-                after: List[Dict[str, Any]]) -> List["object"]:
+                after: List[Dict[str, Any]],
+                viewport: Optional[Dict[str, Any]] = None) -> List["object"]:
         from ..models import Signal
         signals: List[Signal] = []
 
@@ -115,7 +130,7 @@ class DomOracle:
                                       "the element map is identical before and after this action",
                                       step, "notable", {}))
 
-        overlaps = find_overlaps(after)
+        overlaps = find_overlaps(after, viewport)
         for f_key, e_key, ratio in overlaps:
             signals.append(Signal(
                 self.source, "overlap",

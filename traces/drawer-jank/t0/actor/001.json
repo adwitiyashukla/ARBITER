@@ -1,0 +1,10 @@
+{
+  "fingerprint": "095299cddfb451c3",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "The instrumentation explicitly recorded `visual.stepped_animation (hard): transition advanced in 3 discrete jumps with 2 still frame(s) in between`, confirming the side menu animation stutters instead of sliding smoothly.\n\n```json\n{\n  \"action\": \"finish\",\n  \"verdict\": \"REPRODUCED\",\n  \"reason\": \"Instrumentation confirmed that the side menu transition advanced in 3 discrete jumps with 2 still frames instead of a smooth slide.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2580,
+    "completion_tokens": 103
+  }
+}

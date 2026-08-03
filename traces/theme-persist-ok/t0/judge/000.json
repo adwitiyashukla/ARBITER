@@ -1,0 +1,10 @@
+{
+  "fingerprint": "9289f3a5807a0f70",
+  "model": "gemini-3.5-flash-lite",
+  "images": 4,
+  "text": "```json\n{\n \"verdict\": \"NOT_REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Dark mode remained enabled with the checkbox ticked after switching to Profile and back to Home.\",\n \"evidence\": [\n  \"Screenshot 4 shows the final state with 'Dark mode' still checked and the dark theme active.\",\n  \"Actions executed successfully followed the reproduction steps: check dark mode, click Profile, click Home.\"\n ],\n \"reasoning\": \"The bug report claims that navigating between the Home and Profile tabs causes dark mode to switch off and clear the checkbox. However, inspection of the final screenshot shows that dark mode and the checkbox remain successfully checked and active, demonstrating that the application behaves correctly.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 5068,
+    "completion_tokens": 162
+  }
+}

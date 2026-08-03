@@ -1,0 +1,10 @@
+{
+  "fingerprint": "9289f3a5807a0f70",
+  "model": "gemini-3.5-flash-lite",
+  "images": 4,
+  "text": "```json\n{\"verdict\": \"NOT_REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Dark mode remained enabled and the checkbox remained checked after switching between tabs.\",\n \"evidence\": [\"Action 1 checked Dark mode (screenshot 2)\", \"Action 2 clicked Profile (screenshot 3 shows dark mode is still active)\", \"Action 3 clicked Home (screenshot 4 shows dark mode and the checkbox remain active and ticked)\"],\n \"reasoning\": \"The bug report claims that switching to the Profile tab and back to Home turns off dark mode and clears the checkbox. However, reviewing the screenshots and actions reveals that dark mode successfully stays on and the checkbox remains checked throughout tab navigation.\"}\n```",
+  "usage": {
+    "prompt_tokens": 5068,
+    "completion_tokens": 156
+  }
+}

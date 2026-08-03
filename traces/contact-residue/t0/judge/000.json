@@ -1,0 +1,10 @@
+{
+  "fingerprint": "f9b0da3da8efc3a0",
+  "model": "gemini-3.5-flash-lite",
+  "images": 3,
+  "text": "```json\n{\n \"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The typed text 'Joh' remains in the input field alongside the newly added contact chip 'John Baker'.\",\n \"evidence\": [\n  \"Action executed: click(ref=3) on the suggested contact\",\n  \"Screenshot 3 shows both the 'John Baker' chip and the text input field containing 'Joh'\",\n  \"DOM state delta: added: span#chip 'John Baker'\"\n ],\n \"reasoning\": \"The screenshot clearly shows that after selecting the suggested contact 'John Baker', the contact chip is created, but the typed text 'Joh' remains inside the input box below it, exactly matching the bug report description.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 3960,
+    "completion_tokens": 169
+  }
+}

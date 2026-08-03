@@ -105,7 +105,7 @@ def run_smoke(apps_dir: str = "benchmark/apps", headless: bool = True) -> int:
                 _, frames, stamps = d.act_with_burst(Action("click", {"ref": x_ref}))
                 snap2, _ = d.snapshot()
                 vis = {s.kind for s in VisualOracle().inspect(1, frames, stamps)}
-                dom = {s.kind for s in DomOracle().inspect(1, before, snap2["elements"])}
+                dom = {s.kind for s in DomOracle().inspect(1, before, snap2["elements"], snap2.get("viewport"))}
                 check("no_op" in vis or "no_dom_change" in dom,
                       "the dead X button is detected as a no-op",
                       "visual: {0} | dom: {1}".format(", ".join(sorted(vis)) or "none",
@@ -114,7 +114,7 @@ def run_smoke(apps_dir: str = "benchmark/apps", headless: bool = True) -> int:
             d.goto(server.url_for("header-overlap.html"))
             d.act(Action("resize", {"width": 520, "height": 720}))
             snap, _ = d.snapshot()
-            dom_sigs = DomOracle().inspect(2, None, snap["elements"])
+            dom_sigs = DomOracle().inspect(2, None, snap["elements"], snap.get("viewport"))
             check(any(s.kind == "overlap" for s in dom_sigs),
                   "dom oracle detects the pinned bar covering content",
                   "; ".join(s.detail for s in dom_sigs if s.kind == "overlap") or "no overlap found")

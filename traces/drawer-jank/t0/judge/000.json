@@ -1,0 +1,10 @@
+{
+  "fingerprint": "4a71293fd2c54e51",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\"verdict\": \"REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"The side menu animation stuttered in discrete jumps instead of sliding smoothly.\",\n \"evidence\": [\"visual.stepped_animation: transition advanced in 3 discrete jumps with 2 still frame(s) in between; 67% of all pixel change arrived in 2 frames\", \"Screenshot 1 showing initial state and Screenshot 2 showing the drawer open after clicking the button\"],\n \"reasoning\": \"The bug report describes a side menu animation that stutters/jumps in chunks instead of sliding smoothly. The objective instrumentation explicitly recorded a stepped animation with 3 discrete jumps and 2 still frames, confirming the exact symptom described.\"}\n```",
+  "usage": {
+    "prompt_tokens": 2902,
+    "completion_tokens": 164
+  }
+}

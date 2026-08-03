@@ -1,0 +1,10 @@
+{
+  "fingerprint": "1f50a26a213da184",
+  "model": "gemini-3.5-flash-lite",
+  "images": 2,
+  "text": "```json\n{\n \"verdict\": \"NOT_REPRODUCED\",\n \"confidence\": 1.0,\n \"symptom_observed\": \"Typing 'ADA' in capital letters correctly filters the list and shows Ada Lovelace.\",\n \"evidence\": [\n  \"Action 1 typed 'ADA' into the search box.\",\n  \"Objective signal recorded: text_changed: p#hits: '5 of 5 shown' -> '1 of 5 shown'; li#person: 'Edsger Dijkstra' -> 'Ada Lovelace'.\",\n  \"Screenshot 2 clearly shows 'Ada Lovelace' listed as a result after typing 'ADA'.\"\n ],\n \"reasoning\": \"The bug report claims that searching with capital letters returns an empty list. However, the execution logs and screenshot show that typing 'ADA' successfully filters the list and displays Ada Lovelace, proving that the application handles uppercase searches correctly.\"\n}\n```",
+  "usage": {
+    "prompt_tokens": 2765,
+    "completion_tokens": 198
+  }
+}

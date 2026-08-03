@@ -72,16 +72,29 @@ class RecordingProvider(LLMProvider):
         self.trace_dir = trace_dir
         self.scope = "default"
         self._index = 0
+        self._cleared = False
 
     def start_scope(self, scope: str) -> None:
         self.scope = scope
         self._index = 0
         self.inner.start_scope(scope)
+        self._cleared = False
 
     def complete(self, system: str, user: str, images: Optional[List[bytes]] = None) -> Reply:
         reply = self.inner.complete(system, user, images)
         out_dir = os.path.join(self.trace_dir, self.scope)
         os.makedirs(out_dir, exist_ok=True)
+        if not self._cleared:
+            # Stale recordings from an aborted attempt must not survive, but they are only
+            # dropped once a replacement is actually in hand. A failed call leaves the
+            # previous good trace intact.
+            for name in os.listdir(out_dir):
+                if name.endswith(".json"):
+                    try:
+                        os.remove(os.path.join(out_dir, name))
+                    except OSError:
+                        pass
+            self._cleared = True
         with open(os.path.join(out_dir, "{0:03d}.json".format(self._index)), "w", encoding="utf-8") as fh:
             json.dump({
                 "fingerprint": _fingerprint(system, user, len(images or [])),

@@ -16,21 +16,45 @@ from ..models import Usage
 # Free API tiers rate limit aggressively. A long benchmark will hit 429 sooner or later,
 # and losing a trial to it would quietly corrupt the results, so retry rather than fail.
 RETRY_STATUSES = (429, 500, 502, 503, 504)
-MAX_ATTEMPTS = 5
-BASE_BACKOFF_S = 2.0
+MAX_ATTEMPTS = 6
+BASE_BACKOFF_S = 5.0
+MAX_BACKOFF_S = 65.0        # most per-minute quotas clear within a minute
+
+# Client-side pacing. Backing off after a 429 is damage control; not tripping the limit
+# in the first place is the actual fix, so every call goes through this throttle.
+_MIN_INTERVAL_S = 0.0
+_last_call_at = 0.0
+
+
+def set_rate_limit(requests_per_minute: float) -> None:
+    global _MIN_INTERVAL_S
+    _MIN_INTERVAL_S = (60.0 / requests_per_minute) if requests_per_minute > 0 else 0.0
+
+
+def _throttle() -> None:
+    global _last_call_at
+    if _MIN_INTERVAL_S <= 0:
+        return
+    wait = _last_call_at + _MIN_INTERVAL_S - time.monotonic()
+    if wait > 0:
+        time.sleep(wait)
+    _last_call_at = time.monotonic()
 
 
 def request_with_retry(send: Callable[[], Any], label: str = "") -> Any:
     """Call send(), retrying on rate limits and transient server errors."""
     last = None
     for attempt in range(MAX_ATTEMPTS):
+        _throttle()
         response = send()
         if response.status_code not in RETRY_STATUSES:
+            global _consecutive_exhaustions
+            _consecutive_exhaustions = 0
             return response
         last = response
         if attempt == MAX_ATTEMPTS - 1:
             break
-        wait = BASE_BACKOFF_S * (2 ** attempt) + random.uniform(0, 1.0)
+        wait = min(BASE_BACKOFF_S * (2 ** attempt), MAX_BACKOFF_S) + random.uniform(0, 1.0)
         header = response.headers.get("Retry-After") if hasattr(response, "headers") else None
         if header:
             try:
@@ -40,11 +64,33 @@ def request_with_retry(send: Callable[[], Any], label: str = "") -> Any:
         print("    [{0}] http {1}, waiting {2:.1f}s (attempt {3}/{4})".format(
             label or "llm", response.status_code, wait, attempt + 1, MAX_ATTEMPTS))
         time.sleep(wait)
+
+    globals()["_consecutive_exhaustions"] = _consecutive_exhaustions + 1
+    if _consecutive_exhaustions >= CONSECUTIVE_FAILURE_LIMIT:
+        raise QuotaExhausted(
+            "{0} calls in a row exhausted their retries against {1}, most recently http {2}. "
+            "This looks like a daily quota rather than a burst limit, so stopping here. "
+            "Try a different model with --judge-model or --actor-model, or come back "
+            "tomorrow.".format(_consecutive_exhaustions, label or "the provider",
+                               getattr(last, "status_code", "?")))
     return last
 
 
 class LLMError(RuntimeError):
     pass
+
+
+class QuotaExhausted(LLMError):
+    """Raised once retrying is clearly pointless.
+
+    A daily quota does not clear in 65 seconds, so grinding through the full backoff
+    ladder on every remaining call wastes many minutes to produce nothing. After a few
+    consecutive calls exhaust their retries, stop and say so.
+    """
+
+
+CONSECUTIVE_FAILURE_LIMIT = 3
+_consecutive_exhaustions = 0
 
 
 @dataclass

@@ -1,0 +1,10 @@
+{
+  "fingerprint": "dc3db55a68cb706d",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "We have clicked the plus button once (quantity is now 2). To reproduce the bug, we need to press the plus button once more and observe if the quantity skips 3 and goes straight to 4.\n\n```json\n{\"action\": \"click\", \"ref\": 4}\n```",
+  "usage": {
+    "prompt_tokens": 2361,
+    "completion_tokens": 61
+  }
+}

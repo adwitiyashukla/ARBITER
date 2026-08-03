@@ -1,0 +1,10 @@
+{
+  "fingerprint": "e516375e92606488",
+  "model": "gemini-3.5-flash-lite",
+  "images": 1,
+  "text": "I will start by typing \"Joh\" into the To field to bring up the contact suggestions.\n\n```json\n{\"action\": \"type\", \"ref\": 2, \"text\": \"Joh\", \"clear\": false}\n```",
+  "usage": {
+    "prompt_tokens": 2277,
+    "completion_tokens": 48
+  }
+}
