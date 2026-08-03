@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard</title><style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#f4f5f7;color:#1b1f24}
+header{background:#2d3748;color:#fff;padding:14px 18px;font-weight:600;font-size:17px}
+main{max-width:640px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #dfe3e8;border-radius:8px;padding:16px;margin-bottom:14px}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid #2d3748;background:#2d3748;color:#fff;cursor:pointer}
+button.secondary{background:#fff;color:#2d3748}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;padding:8px 10px;border:1px solid #c3c9d1;border-radius:6px;width:100%}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:13px}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eef0f3}
+.row{display:flex;gap:8px;align-items:center}
+.muted{color:#6b7280;font-size:13px}
+</style></head><body>
+<header>Dashboard</header><main>
+<div id="fixedbar" style="position:fixed;top:0;left:0;right:0;background:#2d3748;color:#fff;padding:12px 16px;z-index:5">
+  <span style="font-weight:600">Dashboard</span>
+  <span class="muted" style="color:#cbd5e0;margin-left:12px">Analytics workspace for the current quarter</span>
+</div>
+<div style="height:52px"></div>
+<div class="card" id="firstCard"><strong>Revenue</strong><p class="muted">Quarter to date performance summary.</p></div>
+<div class="card"><strong>Signups</strong><p class="muted">New accounts this week.</p></div>
+</main><script>
+// SEEDED BUG: the spacer below the fixed bar is a hard-coded 52px. Under ~600px wide the bar
+// wraps onto two lines and grows to ~76px, so it covers the first card.
+</script></body></html>

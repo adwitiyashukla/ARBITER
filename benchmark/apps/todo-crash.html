@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasklite</title><style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#f4f5f7;color:#1b1f24}
+header{background:#2d3748;color:#fff;padding:14px 18px;font-weight:600;font-size:17px}
+main{max-width:640px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #dfe3e8;border-radius:8px;padding:16px;margin-bottom:14px}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid #2d3748;background:#2d3748;color:#fff;cursor:pointer}
+button.secondary{background:#fff;color:#2d3748}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;padding:8px 10px;border:1px solid #c3c9d1;border-radius:6px;width:100%}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:13px}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eef0f3}
+.row{display:flex;gap:8px;align-items:center}
+.muted{color:#6b7280;font-size:13px}
+</style></head><body>
+<header>Tasklite</header><main>
+<div class="card">
+  <div class="row"><input id="newTask" placeholder="What needs doing?"><button id="addBtn">Add</button></div>
+</div>
+<div class="card"><ul id="list"></ul><p id="summary" class="muted"></p></div>
+</main><script>
+let tasks=[{id:1,text:'Buy milk'}];let next=2;
+function summary(){
+  // SEEDED BUG: assumes the list is never empty; tasks[0] is undefined after the last delete
+  document.getElementById('summary').textContent = tasks.length + ' task(s). Next up: ' + tasks[0].text;
+}
+function render(){
+  const ul=document.getElementById('list'); ul.innerHTML='';
+  tasks.forEach(t=>{
+    const li=document.createElement('li');
+    li.innerHTML='<span>'+t.text+'</span>';
+    const b=document.createElement('button'); b.className='secondary'; b.textContent='Delete';
+    b.setAttribute('data-testid','delete-'+t.id);
+    b.onclick=()=>{ tasks=tasks.filter(x=>x.id!==t.id); render(); };
+    li.appendChild(b); ul.appendChild(li);
+  });
+  summary();
+}
+document.getElementById('addBtn').onclick=()=>{
+  const i=document.getElementById('newTask');
+  if(i.value.trim()){tasks.push({id:next++,text:i.value.trim()});i.value='';render();}
+};
+render();
+</script></body></html>

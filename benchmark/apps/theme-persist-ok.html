@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Account</title><style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#f4f5f7;color:#1b1f24}
+header{background:#2d3748;color:#fff;padding:14px 18px;font-weight:600;font-size:17px}
+main{max-width:640px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #dfe3e8;border-radius:8px;padding:16px;margin-bottom:14px}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid #2d3748;background:#2d3748;color:#fff;cursor:pointer}
+button.secondary{background:#fff;color:#2d3748}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;padding:8px 10px;border:1px solid #c3c9d1;border-radius:6px;width:100%}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:13px}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eef0f3}
+.row{display:flex;gap:8px;align-items:center}
+.muted{color:#6b7280;font-size:13px}
+</style></head><body>
+<header>Account</header><main>
+<div class="card">
+  <div class="row"><input type="checkbox" id="dark" style="width:auto"><label for="dark" style="margin:0">Dark mode</label></div>
+</div>
+<div class="card">
+  <div class="row"><button id="tabHome" class="secondary">Home</button><button id="tabProfile" class="secondary">Profile</button></div>
+  <div id="view" style="margin-top:12px"><strong>Home</strong><p class="muted">Welcome back.</p></div>
+</div>
+</main><script>
+let dark=false, view='Home';
+function apply(){
+  document.body.style.background = dark ? '#12161c' : '#f4f5f7';
+  document.body.style.color = dark ? '#e6e8eb' : '#1b1f24';
+  document.querySelectorAll('.card').forEach(c=>{
+    c.style.background = dark ? '#1d232c' : '#fff';
+    c.style.borderColor = dark ? '#2f3a47' : '#dfe3e8';
+  });
+  document.getElementById('dark').checked = dark;   // correct: state survives re-render
+  document.getElementById('view').innerHTML='<strong>'+view+'</strong><p class="muted">Welcome back.</p>';
+}
+document.getElementById('dark').addEventListener('change',e=>{dark=e.target.checked;apply();});
+document.getElementById('tabHome').onclick=()=>{view='Home';apply();};
+document.getElementById('tabProfile').onclick=()=>{view='Profile';apply();};
+apply();
+</script></body></html>

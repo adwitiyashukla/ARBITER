@@ -1,0 +1,7 @@
+playwright>=1.44
+opencv-python-headless>=4.9
+numpy>=1.24
+Pillow>=10.0
+PyYAML>=6.0
+requests>=2.31
+pytest>=8.0

@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Composer</title><style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#f4f5f7;color:#1b1f24}
+header{background:#2d3748;color:#fff;padding:14px 18px;font-weight:600;font-size:17px}
+main{max-width:640px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #dfe3e8;border-radius:8px;padding:16px;margin-bottom:14px}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid #2d3748;background:#2d3748;color:#fff;cursor:pointer}
+button.secondary{background:#fff;color:#2d3748}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;padding:8px 10px;border:1px solid #c3c9d1;border-radius:6px;width:100%}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:13px}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eef0f3}
+.row{display:flex;gap:8px;align-items:center}
+.muted{color:#6b7280;font-size:13px}
+</style></head><body>
+<header>Composer</header><main>
+<div class="card">
+  <label for="to">To</label>
+  <div id="chips" class="row" style="flex-wrap:wrap;margin-bottom:6px"></div>
+  <input id="to" placeholder="Start typing a name" autocomplete="off">
+  <ul id="suggestions"></ul>
+</div>
+<div class="card"><label for="msg">Message</label><input id="msg" placeholder="Say something"></div>
+</main><script>
+const people=['John Baker','Johanna Reed','Jordan Ali','Priya Nair'];
+const to=document.getElementById('to'), sug=document.getElementById('suggestions'), chips=document.getElementById('chips');
+to.addEventListener('input',()=>{
+  const q=to.value.trim().toLowerCase(); sug.innerHTML='';
+  if(!q) return;
+  people.filter(p=>p.toLowerCase().includes(q)).forEach(p=>{
+    const li=document.createElement('li'); li.textContent=p; li.style.cursor='pointer';
+    li.setAttribute('data-testid','suggestion');
+    li.onclick=()=>{
+      const c=document.createElement('span');
+      c.textContent=p; c.setAttribute('data-testid','chip');
+      c.style.cssText='background:#e5e7eb;border-radius:12px;padding:4px 10px';
+      chips.appendChild(c);
+      sug.innerHTML='';
+      // SEEDED BUG: the chip is added but the typed fragment is never cleared from the input.
+    };
+    sug.appendChild(li);
+  });
+});
+</script></body></html>

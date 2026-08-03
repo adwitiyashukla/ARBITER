@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Export settings</title><style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:#f4f5f7;color:#1b1f24}
+header{background:#2d3748;color:#fff;padding:14px 18px;font-weight:600;font-size:17px}
+main{max-width:640px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #dfe3e8;border-radius:8px;padding:16px;margin-bottom:14px}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid #2d3748;background:#2d3748;color:#fff;cursor:pointer}
+button.secondary{background:#fff;color:#2d3748}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select{font:inherit;padding:8px 10px;border:1px solid #c3c9d1;border-radius:6px;width:100%}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:13px}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eef0f3}
+.row{display:flex;gap:8px;align-items:center}
+.muted{color:#6b7280;font-size:13px}
+</style></head><body>
+<header>Export settings</header><main>
+<div class="card">
+  <div class="row"><input type="checkbox" id="advanced" style="width:auto"><label for="advanced" style="margin:0">Enable advanced export</label></div>
+  <p class="muted">Turning this on should unlock the four options below.</p>
+</div>
+<div class="card">
+  <label for="fmt">Format</label><select id="fmt" disabled><option>CSV</option><option>JSON</option></select>
+  <label for="range">Date range</label><select id="range" disabled><option>Last 7 days</option><option>All time</option></select>
+  <label for="enc">Encoding</label><select id="enc" disabled><option>UTF-8</option><option>Latin-1</option></select>
+  <label for="cols">Columns</label><select id="cols" disabled><option>All</option><option>Visible only</option></select>
+  <button id="exportBtn" style="margin-top:12px">Export</button>
+</div>
+</main><script>
+document.getElementById('advanced').addEventListener('change',e=>{
+  // SEEDED BUG: the wrong selector is used, so no control is ever enabled.
+  // '.advanced-option' does not match anything in the document.
+  document.querySelectorAll('.advanced-option').forEach(el=>{ el.disabled = !e.target.checked; });
+});
+document.getElementById('exportBtn').onclick=()=>alert('Exported');
+</script></body></html>

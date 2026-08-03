@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run the test suite
+        run: pytest -q
+
+  replay:
+    name: offline replay of a recorded run
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Check the environment
+        run: python -m arbiter check --provider mock
+      - name: Replay the recorded benchmark with no API key
+        if: hashFiles('traces/**') != ''
+        run: python -m arbiter run --provider mock --trials 1 --out ci-report
+      - name: Upload the report
+        if: hashFiles('traces/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: arbiter-report
+          path: ci-report
