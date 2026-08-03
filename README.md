@@ -335,6 +335,12 @@ Stated plainly, because a results table without these is not worth much:
   Unresolved trials always count as non-reproductions, never as successes.
 - **Ten reports is a small benchmark.** The rates below have wide error bars. The infrastructure
   is built to scale to more cases, the cases themselves are the work.
+- **The overlap signal is noisier than the other two.** Visible in the published report: on
+  `drawer-jank` the DOM oracle reports the open drawer covering the button behind it, which is
+  what an open drawer is supposed to do. Backdrops larger than 60 percent of the viewport are
+  already excluded, but a partial overlay still trips it. It never changed a verdict here, since
+  the judge weighs signals against the report rather than treating any of them as proof, but it is
+  a false-signal source and a stricter rule belongs on the list.
 - **No cross-origin or authentication flows.** Cross-app and OAuth journeys are out of scope, the
   same limitation the Android literature reports.
 - **Cost figures use paid-tier rates** from the vendor's public pricing page, checked 2026-08-02,
