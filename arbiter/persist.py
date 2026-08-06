@@ -37,6 +37,13 @@ def _step(d: Dict) -> StepRecord:
                       signals=[_signal(s) for s in d.get("signals") or []])
 
 
+# Public aliases. The demo Space rebuilds StepRecord and Signal objects straight from
+# the trial dictionaries inside results.json, so it can call the real judge payload
+# builder rather than reimplementing it.
+step_from_dict = _step
+signal_from_dict = _signal
+
+
 def load_trial(path: str) -> TrialResult:
     with open(path, "r", encoding="utf-8") as fh:
         d = json.load(fh)

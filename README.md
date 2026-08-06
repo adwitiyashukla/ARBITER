@@ -5,6 +5,7 @@
 [![CI](https://github.com/adwitiyashukla/ARBITER/actions/workflows/ci.yml/badge.svg)](https://github.com/adwitiyashukla/ARBITER/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+[![Demo](https://img.shields.io/badge/demo-Hugging%20Face%20Space-ffbd45.svg)](https://huggingface.co/spaces/adwitiyashukla/ARBITER)
 
 ARBITER reads a bug report written for a web application, drives a real browser to try to
 reproduce it, and then has to convince a **separate model that never sees its reasoning** that
@@ -204,6 +205,14 @@ The judge rejected none of the 24 claims the actor made on this run, so on this 
 
 The full interactive report, including per-trial judge reasoning and the screenshots the judge
 based its verdict on, is published from [`docs/`](docs/).
+
+**Try it without installing anything.** The
+[Hugging Face Space](https://huggingface.co/spaces/adwitiyashukla/ARBITER) runs the parts that
+need no API key: browse every trial with its evidence, feed the frame-difference oracle your own
+screen recording and get a jank verdict from the real code, and watch the judge payload get built
+live with a check that the actor's conclusion is nowhere inside it. Built from this repo with
+`python tools/build_space.py --out <space checkout>`, so the demo cannot drift from the results
+it shows.
 
 ### Auditing the judge
 
