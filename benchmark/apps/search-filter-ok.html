@@ -27,7 +27,7 @@ function render(list){
   document.getElementById('hits').textContent=list.length+' of '+people.length+' shown';
 }
 document.getElementById('q').addEventListener('input',e=>{
-  const q=e.target.value.trim().toLowerCase();       // correct: case-insensitive on both sides
+  const q=e.target.value.trim().toLowerCase();
   render(people.filter(p=>p.toLowerCase().includes(q)));
 });
 render(people);

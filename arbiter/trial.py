@@ -1,4 +1,3 @@
-"""Orchestration: trials, repeats, and the actor/judge combination rule."""
 from __future__ import annotations
 
 import json
@@ -23,12 +22,6 @@ from .server import BenchmarkServer
 
 
 def combine(actor_verdict: str, judge_verdict: str) -> str:
-    """The rule that makes a claimed reproduction count, or not.
-
-    A trial only counts as a reproduction when the actor claims it AND the independent
-    judge confirms it from the evidence. Everything else is recorded separately so the
-    disagreement rate is visible rather than hidden.
-    """
     if judge_verdict == INCONCLUSIVE:
         return UNRESOLVED
     if actor_verdict == REPRODUCED and judge_verdict == REPRODUCED:
@@ -65,7 +58,6 @@ def _providers(cfg: RunConfig, scope: str) -> Tuple[object, object]:
 
 
 def build_driver(crash: CrashOracle, spec: BugSpec, cfg: RunConfig, evidence_dir: str):
-    """Seam. Tests and future platform drivers replace this factory."""
     from .driver.web import WebDriver
     return WebDriver(crash, spec.viewport, headless=cfg.headless,
                      video_dir=os.path.join(evidence_dir, "video") if cfg.video else "")
@@ -100,7 +92,7 @@ def run_trial(spec: BugSpec, cfg: RunConfig, server: BenchmarkServer, index: int
             final_state = perception.element_map(snap)
         except Exception:
             final_state = "(final page state could not be captured)"
-    except Exception as exc:                       # keep one bad trial from killing the suite
+    except Exception as exc:
         error = "{0}: {1}".format(type(exc).__name__, str(exc)[:300])
     finally:
         driver.stop()
@@ -160,7 +152,7 @@ def run_suite(cfg: RunConfig) -> SuiteResult:
                 print("\n  {0}\n  Reporting on the {1} report(s) already completed.".format(
                     exc, len(out.results)))
                 break
-            except Exception as exc:      # one bad report should not destroy a long run
+            except Exception as exc:
                 print("    {0} failed: {1}: {2}".format(spec.id, type(exc).__name__,
                                                         str(exc)[:200]))
                 if not out.results:

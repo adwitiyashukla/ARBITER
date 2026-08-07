@@ -1,8 +1,3 @@
-"""The action vocabulary the actor model is allowed to emit, and its validator.
-
-Keeping this in one place means the prompt, the driver and the tests can never drift
-apart: the schema below is the single source of truth for all three.
-"""
 from __future__ import annotations
 
 import json
@@ -11,7 +6,6 @@ from typing import Any, Dict, List, Tuple
 
 from .models import Action
 
-# name -> (required args, optional args, one line description for the prompt)
 SCHEMA: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], str]] = {
     "click":        (("ref",),            (),            "Click element #ref."),
     "double_click": (("ref",),            (),            "Double click element #ref (fires two clicks fast)."),
@@ -35,7 +29,7 @@ MAX_WAIT_MS = 3000
 
 
 class ActionError(ValueError):
-    """Raised when the model emits something outside the vocabulary."""
+    pass
 
 
 def schema_for_prompt() -> str:
@@ -49,7 +43,6 @@ def schema_for_prompt() -> str:
 
 
 def extract_json_block(text: str) -> str:
-    """Pull the JSON payload out of a model reply that may be wrapped in prose or fences."""
     fenced = re.findall(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
     for block in reversed(fenced):
         if block.strip():
@@ -100,7 +93,6 @@ def validate(raw: Dict[str, Any]) -> Action:
 
 
 def parse(text: str) -> List[Action]:
-    """Parse a model reply into one or more validated actions."""
     payload = json.loads(extract_json_block(text))
     if isinstance(payload, dict):
         payload = [payload]

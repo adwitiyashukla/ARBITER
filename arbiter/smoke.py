@@ -1,10 +1,3 @@
-"""A no-API-key smoke test of everything except the language model.
-
-Drives three benchmark apps with a hard-coded action sequence and asserts that the
-instrumentation sees what it is supposed to see. If this passes, perception, the
-action layer, the driver and all three oracles work on this machine, and any later
-failure is a model or prompt problem rather than a plumbing problem.
-"""
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -41,7 +34,6 @@ def run_smoke(apps_dir: str = "benchmark/apps", headless: bool = True) -> int:
                                   ("  <- " + detail) if detail else ""))
 
     with BenchmarkServer(apps_dir) as server:
-        # 1. crash oracle -----------------------------------------------------
         crash = CrashOracle()
         d = WebDriver(crash, {"width": 900, "height": 700}, headless=headless)
         try:
@@ -65,7 +57,6 @@ def run_smoke(apps_dir: str = "benchmark/apps", headless: bool = True) -> int:
         finally:
             d.stop()
 
-        # 2. visual oracle, stepped animation ---------------------------------
         crash = CrashOracle()
         d = WebDriver(crash, {"width": 900, "height": 700}, headless=headless)
         try:
@@ -87,7 +78,6 @@ def run_smoke(apps_dir: str = "benchmark/apps", headless: bool = True) -> int:
         finally:
             d.stop()
 
-        # 3. dom oracle, dead control and overlap ------------------------------
         crash = CrashOracle()
         d = WebDriver(crash, {"width": 900, "height": 700}, headless=headless)
         try:

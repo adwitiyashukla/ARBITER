@@ -1,4 +1,3 @@
-"""Run configuration, assembled from the environment and the command line."""
 from __future__ import annotations
 
 import os
@@ -8,14 +7,13 @@ from typing import Dict, Optional
 DEFAULTS = {
     "provider": "gemini",
     "actor_model": "gemini-3.5-flash-lite",
-    "judge_provider": "",              # empty means: same provider as the actor
+    "judge_provider": "",
     "judge_model": "gemini-3.5-flash",
     "trials": 3,
 }
 
 
 def load_dotenv(path: str = ".env") -> None:
-    """Minimal .env reader so the project has no dependency on python-dotenv."""
     if not os.path.exists(path):
         return
     with open(path, "r", encoding="utf-8") as fh:

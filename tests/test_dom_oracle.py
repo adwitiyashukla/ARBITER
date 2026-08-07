@@ -42,8 +42,6 @@ def test_overlap_ignores_ancestors():
 
 
 def test_overlap_reports_a_bar_that_completely_swallows_a_heading():
-    """The regression the smoke test caught: total covering was being treated as
-    containment and skipped, which threw away the strongest possible evidence."""
     bar = el(0, tag="div", text="Dashboard", path="body>div#topbar", fixed=True,
              rect=(0, 0, 520, 85), id="topbar")
     heading = el(1, tag="strong", text="Revenue", path="body>main>div#firstCard>strong",
@@ -53,13 +51,11 @@ def test_overlap_reports_a_bar_that_completely_swallows_a_heading():
 
 
 def test_overlap_ignores_a_fullscreen_backdrop():
-    """A modal overlay covering the page is doing its job, not exhibiting a bug."""
     overlay = el(0, tag="div", text="", path="body>div#overlay", fixed=True,
                  rect=(0, 0, 900, 700), id="overlay")
     behind = el(1, tag="button", text="Open settings", path="body>main>button",
                 rect=(20, 100, 140, 36))
     assert find_overlaps([overlay, behind], viewport={"width": 900, "height": 700}) == []
-    # without a viewport there is nothing to compare against, so it is still reported
     assert find_overlaps([overlay, behind]) != []
 
 

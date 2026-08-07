@@ -1,4 +1,3 @@
-"""The actor loop: perceive, decide, act, measure."""
 from __future__ import annotations
 
 import os
@@ -100,7 +99,6 @@ class Actor:
         return verdict, reason, self.steps, self.signals
 
     def _decide(self, user: str, image: bytes) -> Optional[Action]:
-        """Ask the model for one action, tolerating a couple of malformed replies."""
         message = user
         for attempt in range(MAX_PARSE_RETRIES + 1):
             try:

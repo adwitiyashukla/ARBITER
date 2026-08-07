@@ -1,14 +1,3 @@
-"""Assemble a deployable Hugging Face Space from this repository.
-
-The Space is built from the repo rather than maintained as a second copy of the code.
-Only `space/app.py`, `space/README.md` and `space/requirements.txt` are written by hand;
-the package and the data are copied from their canonical locations, so the demo can never
-drift away from the code and results it claims to show.
-
-    python tools/build_space.py --out ../hf-arbiter
-
-Then commit and push that directory to your Space repo.
-"""
 from __future__ import annotations
 
 import argparse
@@ -19,7 +8,6 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# (source, destination inside the Space)
 COPY_FILES = [
     ("space/app.py", "app.py"),
     ("space/README.md", "README.md"),
@@ -47,7 +35,6 @@ def fail(message: str) -> int:
 
 
 def read_frontmatter(path: str):
-    """Parse the YAML block Hugging Face reads at the top of a Space README."""
     with open(path, encoding="utf-8") as fh:
         lines = fh.read().splitlines()
     if not lines or lines[0].strip() != "---":
@@ -63,7 +50,6 @@ def read_frontmatter(path: str):
 
 
 def validate_frontmatter(out_dir: str):
-    """Catch the metadata rules locally, rather than finding out from a rejected push."""
     problems = []
     fields = read_frontmatter(os.path.join(out_dir, "README.md"))
     if fields is None:
@@ -114,7 +100,6 @@ def build(out_dir: str, clean: bool) -> int:
         count = sum(len(files) for _, _, files in os.walk(target))
         print("  [ok]   {0}/  ({1} files)".format(dest, count))
 
-    # the demo is only worth publishing if the data behind it is actually there
     with open(os.path.join(out_dir, "data", "results.json"), encoding="utf-8") as fh:
         results = json.load(fh)
     bugs = results.get("bugs", [])

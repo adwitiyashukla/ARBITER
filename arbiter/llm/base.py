@@ -1,8 +1,3 @@
-"""Provider interface.
-
-Deliberately built on plain HTTP through requests rather than vendor SDKs: one less
-dependency to break, and the wire format is visible in the repo for anyone reading it.
-"""
 from __future__ import annotations
 
 import os
@@ -13,15 +8,11 @@ from typing import Any, Callable, Dict, List, Optional
 
 from ..models import Usage
 
-# Free API tiers rate limit aggressively. A long benchmark will hit 429 sooner or later,
-# and losing a trial to it would quietly corrupt the results, so retry rather than fail.
 RETRY_STATUSES = (429, 500, 502, 503, 504)
 MAX_ATTEMPTS = 6
 BASE_BACKOFF_S = 5.0
-MAX_BACKOFF_S = 65.0        # most per-minute quotas clear within a minute
+MAX_BACKOFF_S = 65.0
 
-# Client-side pacing. Backing off after a 429 is damage control; not tripping the limit
-# in the first place is the actual fix, so every call goes through this throttle.
 _MIN_INTERVAL_S = 0.0
 _last_call_at = 0.0
 
@@ -42,7 +33,6 @@ def _throttle() -> None:
 
 
 def request_with_retry(send: Callable[[], Any], label: str = "") -> Any:
-    """Call send(), retrying on rate limits and transient server errors."""
     last = None
     for attempt in range(MAX_ATTEMPTS):
         _throttle()
@@ -81,12 +71,7 @@ class LLMError(RuntimeError):
 
 
 class QuotaExhausted(LLMError):
-    """Raised once retrying is clearly pointless.
-
-    A daily quota does not clear in 65 seconds, so grinding through the full backoff
-    ladder on every remaining call wastes many minutes to produce nothing. After a few
-    consecutive calls exhaust their retries, stop and say so.
-    """
+    pass
 
 
 CONSECUTIVE_FAILURE_LIMIT = 3
@@ -101,8 +86,6 @@ class Reply:
 
 
 class LLMProvider:
-    """Every provider takes the same request shape: a system prompt, a user prompt,
-    and an optional list of PNG bytes to attach as images."""
 
     name = "base"
 
@@ -115,7 +98,6 @@ class LLMProvider:
     def complete(self, system: str, user: str, images: Optional[List[bytes]] = None) -> Reply:
         raise NotImplementedError
 
-    # Providers that record traffic override these so runs can be replayed offline.
     def start_scope(self, scope: str) -> None:
         pass
 

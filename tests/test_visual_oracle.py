@@ -1,5 +1,3 @@
-"""The frame-difference oracle is the part that catches animation bugs, so it gets
-tested against synthetic animations with known properties."""
 import numpy as np
 
 from arbiter.oracle.visual import analyze_burst
@@ -18,7 +16,6 @@ def smooth_slide(n=12, step=20):
 
 
 def stepped_slide(n=12):
-    # three big jumps, everything else frozen: what a hand-rolled timer animation looks like
     positions = [0] * 4 + [100] * 4 + [200] * 4
     return [_frame_with_box(p) for p in positions[:n]]
 
@@ -58,7 +55,7 @@ def test_single_instant_change_is_not_jank():
 def test_capture_stall_is_detected_from_timestamps():
     frames = smooth_slide()
     stamps = [i * 70.0 for i in range(len(frames))]
-    stamps[5] += 600           # the page blocked the main thread here
+    stamps[5] += 600
     for i in range(6, len(stamps)):
         stamps[i] += 600
     a = analyze_burst(frames, stamps)

@@ -1,8 +1,3 @@
-"""Tiny static server for the benchmark apps.
-
-Serving over http rather than file:// keeps console errors, fetch and security
-behaviour identical to a real site, and it means the whole benchmark runs offline.
-"""
 from __future__ import annotations
 
 import functools
@@ -14,7 +9,7 @@ from typing import Optional
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, fmt, *args):        # silence per-request logging
+    def log_message(self, fmt, *args):
         pass
 
 

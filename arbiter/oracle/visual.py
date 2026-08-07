@@ -1,16 +1,3 @@
-"""Frame-difference oracle.
-
-Answers three questions about a burst of screenshots taken around one action:
-
-  1. Did anything change at all?           -> no_op detection
-  2. Did a transition play smoothly?       -> stepped_animation (jank) detection
-  3. Did the page stop responding?         -> capture-gap detection
-
-The jank test is the reason this module exists. A smooth CSS transition spreads its
-pixel change evenly across the burst; a hand-rolled timer animation delivers almost
-all of the change in one or two frames and freezes in between. That difference is
-measurable without knowing anything about the app.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -20,17 +7,16 @@ import numpy as np
 
 try:
     import cv2
-except ImportError:      # pragma: no cover - cv2 is a hard dependency at runtime
+except ImportError:
     cv2 = None
 
-# All thresholds operate on mean absolute difference of grayscale frames in 0..1.
-NOOP_EPS = 0.002          # below this, the screen is considered unchanged
-MOTION_EPS = 0.004        # a frame pair counts as carrying motion above this
-JANK_MIN_CHANGE = 0.008   # ignore transitions too small to judge
-CONCENTRATION_LIMIT = 0.60  # share of all change delivered by the two busiest frames
-ACTIVE_RATIO_LIMIT = 0.50   # share of frame pairs that carry motion
-STALL_GAP_MS = 250          # capture gap that suggests a blocked main thread
-WORK_WIDTH = 320            # frames are downscaled to this before comparison
+NOOP_EPS = 0.002
+MOTION_EPS = 0.004
+JANK_MIN_CHANGE = 0.008
+CONCENTRATION_LIMIT = 0.60
+ACTIVE_RATIO_LIMIT = 0.50
+STALL_GAP_MS = 250
+WORK_WIDTH = 320
 
 
 @dataclass
@@ -98,7 +84,6 @@ def mean_abs_diff(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def analyze_burst(frames: Sequence[np.ndarray], timestamps_ms: Optional[Sequence[float]] = None) -> VisualAnalysis:
-    """Analyse a chronological burst of frames captured around a single action."""
     n = len(frames)
     if n < 2:
         return VisualAnalysis(n, 0.0, [], 0, 0.0, 0.0, 0, 0.0, True, False, False, False)
@@ -112,7 +97,6 @@ def analyze_burst(frames: Sequence[np.ndarray], timestamps_ms: Optional[Sequence
     denom = sum(diffs)
     concentration = (sum(ordered[:2]) / denom) if denom > 0 else 0.0
 
-    # Longest run of still frames that sits between two moving frames.
     moving_idx = [i for i, d in enumerate(diffs) if d > MOTION_EPS]
     max_freeze_run = 0
     if len(moving_idx) >= 2:
@@ -143,7 +127,6 @@ def analyze_burst(frames: Sequence[np.ndarray], timestamps_ms: Optional[Sequence
 
 
 class VisualOracle:
-    """Turns a frame burst into Signals."""
 
     source = "visual"
 

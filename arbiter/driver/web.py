@@ -1,4 +1,3 @@
-"""Playwright driver: the only part of the system that knows about browsers."""
 from __future__ import annotations
 
 import os
@@ -41,7 +40,6 @@ class WebDriver(Driver):
         self._ctx = None
         self.page = None
 
-    # ------------------------------------------------------------------ lifecycle
     def start(self) -> None:
         from playwright.sync_api import sync_playwright
         self._pw = sync_playwright().start()
@@ -60,7 +58,6 @@ class WebDriver(Driver):
         self.page.on("requestfailed",
                      lambda req: self.crash.on_request_failed(req.url, str(req.failure)))
         self.page.on("response", lambda res: self.crash.on_response(res.url, res.status))
-        # Never let a modal dialog wedge the run.
         self.page.on("dialog", lambda d: d.accept())
 
     def stop(self) -> str:
@@ -83,7 +80,6 @@ class WebDriver(Driver):
     def url(self) -> str:
         return self.page.url if self.page else ""
 
-    # ---------------------------------------------------------------- perception
     def goto(self, url: str) -> None:
         self.page.goto(url, wait_until="load", timeout=15000)
 
@@ -96,9 +92,8 @@ class WebDriver(Driver):
         try:
             return _decode_gray(self.page.screenshot(type="jpeg", quality=55))
         except Exception:
-            return None            # a dropped frame is not worth failing a trial over
+            return None
 
-    # ------------------------------------------------------------------- actions
     def _sel(self, ref: int) -> str:
         return '[data-arbiter-ref="{0}"]'.format(int(ref))
 
@@ -148,18 +143,12 @@ class WebDriver(Driver):
         except PWError as exc:
             first = str(exc).strip().splitlines()[0]
             return "failed: {0}".format(first[:220])
-        except Exception as exc:                       # pragma: no cover - defensive
+        except Exception as exc:
             return "failed: {0}: {1}".format(type(exc).__name__, str(exc)[:200])
 
     def act_with_burst(self, action: Action, frames: int = BURST_FRAMES,
                        interval_ms: int = BURST_INTERVAL_MS
                        ) -> Tuple[str, List[np.ndarray], List[float]]:
-        """Run an action while sampling the screen, so transitions can be measured.
-
-        One frame before the action, then a fixed cadence afterwards. The wall-clock
-        stamp of each capture is kept: if the page blocks the main thread, the gaps
-        stretch and the visual oracle can see it.
-        """
         shots: List[np.ndarray] = []
         stamps: List[float] = []
 

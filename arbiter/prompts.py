@@ -1,8 +1,3 @@
-"""Every prompt in the system, in one file.
-
-The separation between these two prompts is the point of the project. The actor is
-told to reproduce; the judge is told to disbelieve. Neither ever sees the other's text.
-"""
 from __future__ import annotations
 
 from typing import Dict, List

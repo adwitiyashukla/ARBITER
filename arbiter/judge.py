@@ -1,9 +1,3 @@
-"""The independent reviewer.
-
-Structural guarantee: build_payload cannot leak the actor's conclusion, because it is
-never given it. The only inputs are the report, the executed actions, the instrumented
-signals, the final page state and raw screenshots.
-"""
 from __future__ import annotations
 
 import json
@@ -33,7 +27,6 @@ class JudgeVerdict:
 
 def select_evidence_images(steps: Sequence[StepRecord], evidence_dir: str
                            ) -> Tuple[List[str], List[str]]:
-    """Initial screen, the screens around the strongest signals, and the final screen."""
     paths: List[str] = []
     notes: List[str] = []
 
@@ -67,8 +60,6 @@ def select_evidence_images(steps: Sequence[StepRecord], evidence_dir: str
 
 def build_payload(report: str, steps: Sequence[StepRecord], signals: Sequence[Signal],
                   final_state: str, evidence_dir: str) -> Tuple[str, str, List[bytes], List[str]]:
-    # The finish action carries the actor's verdict and its reasoning. It is dropped
-    # here so that no trace of the actor's conclusion can reach the judge.
     action_lines = ["{0} -> {1}".format(s.action, s.result)
                     for s in steps if s.action and s.action.name != "finish"]
     signal_lines = [s.line() for s in signals]

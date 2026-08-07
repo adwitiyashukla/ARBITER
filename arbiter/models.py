@@ -1,26 +1,22 @@
-"""Core data structures shared across the pipeline."""
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional
 
-# Verdicts an actor or a judge may return.
 REPRODUCED = "REPRODUCED"
 NOT_REPRODUCED = "NOT_REPRODUCED"
 INCONCLUSIVE = "INCONCLUSIVE"
 
-# Trial outcomes after actor and judge are combined.
-CONFIRMED = "CONFIRMED"                      # actor and judge both say reproduced
-REJECTED = "REJECTED"                        # actor claimed it, judge refused it
-DISPUTED = "DISPUTED"                        # judge saw it, actor did not
+CONFIRMED = "CONFIRMED"
+REJECTED = "REJECTED"
+DISPUTED = "DISPUTED"
 AGREED_NOT_REPRODUCED = "AGREED_NOT_REPRODUCED"
-UNRESOLVED = "UNRESOLVED"                    # judge could not tell
+UNRESOLVED = "UNRESOLVED"
 
 
 @dataclass
 class BugSpec:
-    """One bug report in the benchmark."""
     id: str
     title: str
     app: str
@@ -33,7 +29,6 @@ class BugSpec:
     viewport: Dict[str, int] = field(default_factory=lambda: {"width": 1000, "height": 800})
 
     def prompt_view(self) -> str:
-        """Exactly what the actor is allowed to see. Ground truth never appears here."""
         return "TITLE: {0}\n\n{1}".format(self.title, self.report.strip())
 
 
@@ -51,12 +46,11 @@ class Action:
 
 @dataclass
 class Signal:
-    """An objective, machine-checked observation. Never a semantic judgement."""
-    source: str          # crash | visual | dom
-    kind: str            # page_error | console_error | no_op | jank | overlap | state_delta ...
+    source: str
+    kind: str
     detail: str
     step: int
-    severity: str = "info"     # info | notable | hard
+    severity: str = "info"
     evidence: Dict[str, Any] = field(default_factory=dict)
 
     def line(self) -> str:
@@ -72,7 +66,7 @@ class StepRecord:
     action: Optional[Action]
     result: str
     element_count: int
-    frames: List[str] = field(default_factory=list)     # paths, chronological
+    frames: List[str] = field(default_factory=list)
     signals: List[Signal] = field(default_factory=list)
 
 
@@ -112,7 +106,6 @@ class TrialResult:
 
     @property
     def reproduced(self) -> bool:
-        """Strict rule: only a judge-confirmed trial counts as a reproduction."""
         return self.outcome == CONFIRMED
 
 
@@ -154,7 +147,6 @@ class BugResult:
 
     @property
     def verdict(self) -> str:
-        """Bug-level verdict: majority of trials must be judge-confirmed."""
         return REPRODUCED if self.reproduction_rate > 0.5 else NOT_REPRODUCED
 
     @property
@@ -167,7 +159,6 @@ class BugResult:
 
 
 def to_jsonable(obj: Any) -> Any:
-    """dataclass -> plain dict, for artifacts on disk."""
     if hasattr(obj, "__dataclass_fields__"):
         return {k: to_jsonable(v) for k, v in asdict(obj).items()}
     if isinstance(obj, list):

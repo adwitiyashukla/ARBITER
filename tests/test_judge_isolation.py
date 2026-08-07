@@ -1,9 +1,3 @@
-"""The judge must never see what the actor concluded.
-
-This is the property the whole project rests on, so it is asserted structurally
-(the function cannot be handed the actor's verdict) and textually (nothing the actor
-said appears in the payload).
-"""
 import inspect
 import os
 

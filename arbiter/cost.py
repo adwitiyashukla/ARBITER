@@ -1,19 +1,10 @@
-"""Token accounting.
-
-Prices are per one million tokens, in US dollars, and live in one table so they can be
-corrected without touching the pipeline. Every number ARBITER reports about cost is
-derived from token counts returned by the provider, never estimated.
-"""
 from __future__ import annotations
 
 from typing import Dict, Iterable, Tuple
 
 from .models import Usage
 
-# model prefix -> (input per 1M, output per 1M)
 PRICES: Dict[str, Tuple[float, float]] = {
-    # Google, ai.google.dev/gemini-api/docs/pricing, paid tier, checked 2026-08-02.
-    # The three Flash models below also have a free tier, where these rates are 0.
     "gemini-3.6-flash": (1.50, 7.50),
     "gemini-3.5-flash-lite": (0.30, 2.50),
     "gemini-3.5-flash": (1.50, 9.00),

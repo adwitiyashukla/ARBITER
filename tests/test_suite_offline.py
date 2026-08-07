@@ -1,6 +1,3 @@
-"""Runs the whole suite, including report generation, with a stub driver and replayed
-model traffic. Proves the orchestration, scoring, false-positive detection and report
-writing all work without a browser or an API key."""
 import io
 import json
 import os
@@ -26,7 +23,6 @@ def png(shade=240):
 
 
 class StubDriver:
-    """Reports a page with one button, and a crash after the first action."""
 
     def __init__(self, crash):
         self.crash = crash
@@ -86,7 +82,6 @@ JUDGE_NO = json.dumps({"verdict": "NOT_REPRODUCED", "confidence": 0.8,
 def test_full_suite_scores_and_reports(tmp_path=None):
     with tempfile.TemporaryDirectory() as tmp:
         traces = os.path.join(tmp, "traces")
-        # seeded bug: actor claims, judge agrees.  control: actor claims, judge refuses.
         for bug, judge_reply in (("todo-crash", JUDGE_YES), ("search-filter-ok", JUDGE_NO)):
             write_traces(traces, "{0}/t0/actor".format(bug), ACTOR_CLAIMS)
             write_traces(traces, "{0}/t0/judge".format(bug), [judge_reply])
@@ -111,7 +106,7 @@ def test_full_suite_scores_and_reports(tmp_path=None):
         assert m["actor_claimed"] == 2 and m["judge_confirmed"] == 1
         assert m["judge_rejected"] == 1
         assert m["accuracy"] == 1.0
-        assert m["cost"]["calls"] == 6          # 2 actor calls + 1 judge call, twice over
+        assert m["cost"]["calls"] == 6
         assert m["cost"]["usd"] > 0
 
         paths = write_report(suite, cfg.out_dir)
@@ -125,7 +120,6 @@ def test_full_suite_scores_and_reports(tmp_path=None):
         assert "todo-crash" in html and "search-filter-ok" in html
         assert "actor claims vs judge confirms" in html
 
-        # the README injector must render from that exact artifact
         import importlib.util
         spec_ = importlib.util.spec_from_file_location(
             "inject", os.path.join(os.path.dirname(__file__), "..", "tools", "inject_results.py"))
@@ -133,7 +127,8 @@ def test_full_suite_scores_and_reports(tmp_path=None):
         spec_.loader.exec_module(inject)
         md = inject.render(data)
         assert "seeded bugs reproduced" in md and "`todo-crash`" in md
-        assert "would have been counted as successes" in md
+        assert "rejected by the judge" in md
+        assert str(data["metrics"]["judge_rejected"]) in md
 
 
 def test_control_false_positive_is_detected(tmp_path=None):

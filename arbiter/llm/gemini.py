@@ -1,4 +1,3 @@
-"""Google Gemini via the Generative Language REST API."""
 from __future__ import annotations
 
 import base64

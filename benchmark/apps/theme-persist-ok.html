@@ -33,7 +33,7 @@ function apply(){
     c.style.background = dark ? '#1d232c' : '#fff';
     c.style.borderColor = dark ? '#2f3a47' : '#dfe3e8';
   });
-  document.getElementById('dark').checked = dark;   // correct: state survives re-render
+  document.getElementById('dark').checked = dark;
   document.getElementById('view').innerHTML='<strong>'+view+'</strong><p class="muted">Welcome back.</p>';
 }
 document.getElementById('dark').addEventListener('change',e=>{dark=e.target.checked;apply();});

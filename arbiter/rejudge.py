@@ -1,10 +1,3 @@
-"""Re-run the review step over evidence that is already on disk.
-
-Useful when the judge's model was unavailable during a run, or when comparing two
-judge models over identical evidence. It never touches the browser and never re-runs
-the actor, so the evidence being reviewed is byte for byte the evidence from the
-original run.
-"""
 from __future__ import annotations
 
 import os

@@ -30,8 +30,7 @@ li{display:flex;justify-content:space-between;align-items:center;padding:10px;bo
 </div>
 </main><script>
 document.getElementById('advanced').addEventListener('change',e=>{
-  // SEEDED BUG: the wrong selector is used, so no control is ever enabled.
-  // '.advanced-option' does not match anything in the document.
+  // SEEDED BUG: '.advanced-option' matches nothing
   document.querySelectorAll('.advanced-option').forEach(el=>{ el.disabled = !e.target.checked; });
 });
 document.getElementById('exportBtn').onclick=()=>alert('Exported');

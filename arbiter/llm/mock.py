@@ -1,9 +1,3 @@
-"""Deterministic replay provider.
-
-Every live run writes its LLM traffic to traces/. The mock provider plays those
-recordings back in order, so the full pipeline can run in CI with no API key and no
-network, and so a published result can be re-derived byte for byte.
-"""
 from __future__ import annotations
 
 import hashlib
@@ -25,7 +19,6 @@ def _fingerprint(system: str, user: str, images: int) -> str:
 
 
 class MockProvider(LLMProvider):
-    """Replays recorded replies for the current scope, in call order."""
 
     name = "mock"
 
@@ -51,7 +44,6 @@ class MockProvider(LLMProvider):
         expected = rec.get("fingerprint")
         actual = _fingerprint(system, user, len(images or []))
         if expected and expected != actual:
-            # Not fatal: prompts drift as the code evolves. Surface it loudly instead.
             print("  [mock] prompt drift at {0} (recorded {1}, now {2})".format(path, expected, actual))
         u = rec.get("usage", {})
         return Reply(text=rec["text"],
@@ -62,7 +54,6 @@ class MockProvider(LLMProvider):
 
 
 class RecordingProvider(LLMProvider):
-    """Wraps a live provider and writes every exchange to traces/."""
 
     name = "recording"
 
@@ -85,9 +76,6 @@ class RecordingProvider(LLMProvider):
         out_dir = os.path.join(self.trace_dir, self.scope)
         os.makedirs(out_dir, exist_ok=True)
         if not self._cleared:
-            # Stale recordings from an aborted attempt must not survive, but they are only
-            # dropped once a replacement is actually in hand. A failed call leaves the
-            # previous good trace intact.
             for name in os.listdir(out_dir):
                 if name.endswith(".json"):
                     try:

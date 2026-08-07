@@ -24,7 +24,7 @@ li{display:flex;justify-content:space-between;align-items:center;padding:10px;bo
 </main><script>
 let tasks=[{id:1,text:'Buy milk'}];let next=2;
 function summary(){
-  // SEEDED BUG: assumes the list is never empty; tasks[0] is undefined after the last delete
+  // SEEDED BUG: tasks[0] is undefined once the list empties
   document.getElementById('summary').textContent = tasks.length + ' task(s). Next up: ' + tasks[0].text;
 }
 function render(){

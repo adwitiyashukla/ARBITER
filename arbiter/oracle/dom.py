@@ -1,20 +1,13 @@
-"""Structural oracle over the element map produced by perception.
-
-Reports what changed in the DOM and what geometry looks wrong. It deliberately does
-not know anything about any particular bug: it emits deltas and overlaps, and lets
-the judge decide whether they match the report.
-"""
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-OVERLAP_MIN_RATIO = 0.15     # fraction of an element that must be covered to count
-FULLSCREEN_RATIO = 0.60      # a pinned element bigger than this is a backdrop, not a bar
-MAX_DELTA_ITEMS = 12         # keep prompts bounded
+OVERLAP_MIN_RATIO = 0.15
+FULLSCREEN_RATIO = 0.60
+MAX_DELTA_ITEMS = 12
 
 
 def element_key(el: Dict[str, Any]) -> str:
-    """A reasonably stable identity for an element across snapshots."""
     for field in ("testid", "id"):
         if el.get(field):
             return "{0}#{1}".format(el.get("tag", "?"), el[field])
@@ -41,7 +34,6 @@ def _contains(outer: Dict[str, float], inner: Dict[str, float]) -> bool:
 
 
 def state_delta(before: List[Dict[str, Any]], after: List[Dict[str, Any]]) -> Dict[str, List[str]]:
-    """Human-readable diff of two element maps."""
     b = {element_key(e): e for e in before}
     a = {element_key(e): e for e in after}
     delta: Dict[str, List[str]] = {"added": [], "removed": [], "text_changed": [],
@@ -71,13 +63,6 @@ def state_delta(before: List[Dict[str, Any]], after: List[Dict[str, Any]]) -> Di
 
 def find_overlaps(elements: List[Dict[str, Any]],
                   viewport: Optional[Dict[str, Any]] = None) -> List[Tuple[str, str, float]]:
-    """Pinned elements that visually cover unrelated content.
-
-    Two exclusions keep this honest. Elements related by ancestry are skipped, since a
-    header naturally sits on top of its own logo. Pinned elements that fill most of the
-    viewport are skipped too: a modal backdrop covering the page is doing its job, and
-    reporting it would hand the judge a misleading signal on every dialog.
-    """
     out = []
     pinned = [e for e in elements if e.get("fixed") and _area(e.get("rect", {})) > 0]
     if viewport:
@@ -91,11 +76,9 @@ def find_overlaps(elements: List[Dict[str, Any]],
         for e in others:
             ep = e.get("path", "")
             if fp and ep and (ep.startswith(fp) or fp.startswith(ep)):
-                continue                                    # ancestor or descendant
+                continue
             if _contains(e["rect"], f["rect"]):
-                continue        # the content wraps the pinned element, so nothing is hidden
-            # Note the asymmetry: a pinned bar that completely swallows a heading is the
-            # worst case of covering, not a reason to skip it.
+                continue
             inter = _intersection(f["rect"], e["rect"])
             if inter <= 0:
                 continue

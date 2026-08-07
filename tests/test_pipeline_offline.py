@@ -1,5 +1,3 @@
-"""End to end through the real Actor, Judge and combination rule, with a stub driver
-and replayed model traffic. No browser and no network, so this runs anywhere, including CI."""
 import io
 import json
 import os
@@ -21,7 +19,6 @@ def png(color=(240, 240, 240)):
 
 
 class FakeDriver:
-    """Two screens: a list with one item, then the same list with the item gone."""
 
     def __init__(self):
         self.calls = []

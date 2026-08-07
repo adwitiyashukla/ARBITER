@@ -1,11 +1,3 @@
-"""Adversarial check on the judge itself.
-
-A judge that confirms everything is indistinguishable from no judge at all. This audit
-takes the evidence captured for one bug and asks the judge to review it against a
-different bug's report, one the evidence cannot possibly support. A judge that is
-reading the evidence says NOT_REPRODUCED. A judge that is rubber-stamping says
-REPRODUCED, and this is where that would show up.
-"""
 from __future__ import annotations
 
 import json

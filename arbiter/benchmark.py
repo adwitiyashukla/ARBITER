@@ -1,4 +1,3 @@
-"""Loading the benchmark from disk."""
 from __future__ import annotations
 
 import glob

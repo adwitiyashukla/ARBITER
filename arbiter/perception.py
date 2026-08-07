@@ -1,14 +1,3 @@
-"""Turns a live page into something a language model can reason about.
-
-Two artifacts per step:
-  * an element map, numbered and flagged, cheap in tokens
-  * the same screenshot with colour-coded boxes drawn on it, so the model can connect
-    a number in the text to a thing it can see
-
-The colour convention mirrors what a human sees in a devtools overlay:
-  green clickable, blue text input, orange scrollable, purple checkable,
-  red disabled, grey static text, magenta pinned (fixed or sticky).
-"""
 from __future__ import annotations
 
 import io
@@ -28,7 +17,6 @@ COLORS = {
     "text":      (120, 120, 120),
 }
 
-# Injected into the page. Also stamps data-arbiter-ref so actions can address elements.
 COLLECT_JS = r"""
 (maxElements) => {
   const INTERACTIVE = new Set(['A','BUTTON','INPUT','SELECT','TEXTAREA','SUMMARY','OPTION']);
@@ -116,7 +104,6 @@ def _flag_of(el: Dict[str, Any]) -> str:
 
 
 def describe(el: Dict[str, Any]) -> str:
-    """One line per element, the textual half of perception."""
     flags = []
     for name in ("clickable", "editable", "checkable", "scrollable", "fixed", "focused"):
         if el.get(name):
@@ -156,7 +143,6 @@ def element_map(snapshot: Dict[str, Any]) -> str:
 
 
 def annotate(screenshot_png: bytes, elements: List[Dict[str, Any]]) -> bytes:
-    """Draw numbered, colour-coded boxes over the screenshot."""
     img = Image.open(io.BytesIO(screenshot_png)).convert("RGB")
     draw = ImageDraw.Draw(img)
     for el in elements:
@@ -178,7 +164,6 @@ def annotate(screenshot_png: bytes, elements: List[Dict[str, Any]]) -> bytes:
 
 
 def region_colors(screenshot_png: bytes, bands: int = 4) -> str:
-    """Coarse colour summary per horizontal band. Cheap extra signal for visual bugs."""
     img = Image.open(io.BytesIO(screenshot_png)).convert("RGB")
     w, h = img.size
     lines = []

@@ -28,13 +28,12 @@ document.getElementById('toggle').onclick=()=>{
   if(busy) return; busy=true;
   const target = open ? -300 : 0;
   let pos = open ? 0 : -300;
-  // SEEDED BUG: hand-rolled animation with a coarse 150ms timer and 100px jumps.
-  // Instead of a smooth transition the drawer teleports in 3 visible steps.
+  // SEEDED BUG: 150ms timer, 100px jumps, blocks the main thread
   const step=()=>{
     pos += open ? -100 : 100;
     if((!open && pos>=target)||(open && pos<=target)){ pos=target; }
     d.style.left = pos + 'px';
-    const t0=performance.now(); while(performance.now()-t0 < 90){} // main-thread block
+    const t0=performance.now(); while(performance.now()-t0 < 90){}
     if(pos!==target){ setTimeout(step,150); } else { open=!open; busy=false;
       document.getElementById('toggle').textContent = open ? 'Close menu' : 'Open menu'; }
   };

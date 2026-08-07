@@ -1,84 +1,82 @@
-# ARBITER architecture
+# How the code is put together
 
-## Layers
+Notes for anyone reading the source, including me in six months.
+
+## Layout
 
 ```
 benchmark/bugs/*.yaml     bug reports, ground truth, viewport, step budget
-benchmark/apps/*.html     ten self-contained apps, one seeded defect each
+benchmark/apps/*.html     ten self-contained apps, one planted defect each
         |
-arbiter/server.py         local static server, so a run is hermetic and offline
+arbiter/server.py         local static server so a run is offline and hermetic
         |
-arbiter/driver/           the only browser-aware code. base.py is a five method contract
-arbiter/perception.py     DOM -> element map + annotated screenshot + colour bands
-arbiter/actions.py        the 15 action vocabulary, one source of truth for prompt,
-                          driver and tests
+arbiter/driver/           the only browser-aware code, base.py is five methods
+arbiter/perception.py     DOM to element map plus annotated screenshot
+arbiter/actions.py        the 15 actions, one source of truth for prompt, driver and tests
         |
 arbiter/agent.py          the actor loop
-arbiter/oracle/           crash, visual, dom. facts only, never verdicts
+arbiter/oracle/           crash, visual, dom, facts only, no verdicts
         |
-arbiter/judge.py          independent review from evidence alone
+arbiter/judge.py          independent review from evidence
 arbiter/trial.py          N trials, the combination rule, suite metrics
-arbiter/cost.py           token and dollar accounting from provider usage data
+arbiter/cost.py           tokens and dollars from the provider's usage data
 arbiter/report.py         index.html, results.json, summary.md
 ```
 
 ## One step of the actor loop
 
-1. `driver.snapshot()` evaluates `COLLECT_JS` in the page. It filters to visible elements that are
-   interactive, editable, checkable, scrollable, pinned, or carry text, caps the list at 60, and
-   stamps each one with `data-arbiter-ref="N"`. That attribute is how an action addresses an
-   element later, which avoids asking the model to invent CSS selectors.
+1. `driver.snapshot()` runs `COLLECT_JS` in the page. It keeps visible elements that are
+   interactive, editable, checkable, scrollable, pinned or carry text, caps the list at 60, and
+   stamps each one with `data-arbiter-ref="N"`. Actions address elements through that attribute,
+   so the model never has to invent a CSS selector.
 2. `perception.annotate()` draws numbered, colour-coded boxes on the screenshot.
-3. `prompts.actor_user()` assembles the report, the recent action history, the signals raised
-   since the last step, the element map and a coarse colour band summary.
-4. The model replies with prose plus one fenced JSON action. `actions.parse()` extracts the JSON
-   from anywhere in the reply, validates the name, the required arguments, rejects unknown
-   arguments, coerces numeric fields and clamps `wait`. A malformed reply is fed back with the
-   parser's own error message, twice, before the trial gives up.
-5. `driver.act_with_burst()` captures a frame, executes the action, then samples 12 frames at
-   roughly 80 ms with wall-clock stamps.
+3. `prompts.actor_user()` puts together the report, the recent action history, any signals raised
+   since the last step, the element map, and a rough colour summary of the screen.
+4. The model replies with a sentence or two and one fenced JSON action. `actions.parse()` digs
+   the JSON out of wherever it ended up, validates the name and arguments, rejects anything
+   unexpected, coerces the numeric fields and clamps `wait`. If the reply is unusable it goes
+   back with the parser's own error attached, twice, then the trial gives up.
+5. `driver.act_with_burst()` grabs a frame, runs the action, then samples 12 more at roughly
+   80 ms with wall-clock timestamps.
 6. The three oracles turn that into `Signal` objects, which go into the next prompt and into the
-   judge's evidence bundle.
-7. A repeated-action guard warns the model when it emits the same action three times running.
+   evidence bundle for the judge.
+7. If the model emits the same action three times running, the next prompt says so.
 
-## What the judge gets, and what it does not
+## What the judge gets
 
-Gets: the bug report as filed, the executed actions with their result strings, every signal with
-its step index and severity, the final element map, and up to four raw (unannotated) screenshots
-chosen by signal severity, each with a caption saying where in the run it came from.
+It gets the bug report, the executed actions with their result strings, every signal with its
+step index and severity, the final element map, and up to four raw screenshots chosen by signal
+severity, each with a caption saying where in the run it came from.
 
-Does not get: the actor's prose, its self-assessment, its `finish` action, or its verdict. This
-is enforced by the signature of `judge.build_payload`, which has no parameter capable of carrying
-them, and by `tests/test_judge_isolation.py`, which asserts both the signature and that a sentinel
-string from the actor never appears in the rendered payload.
+It does not get the actor's prose, its self-assessment, its `finish` action, or its verdict.
+`judge.build_payload` has no parameter that could carry any of that, and
+`tests/test_judge_isolation.py` checks both the signature and the rendered text.
 
-Raw screenshots rather than annotated ones is a deliberate choice: the overlay is an aid for the
-actor, and showing the judge a pre-interpreted view of the screen would import the actor's
-framing into what is supposed to be an independent look at the evidence.
+The screenshots are the raw ones, not the annotated ones. The overlay is there to help the actor
+address elements, and showing the judge a pre-interpreted view of the screen would drag the
+actor's framing into what is supposed to be a fresh look.
 
 ## Scoring
 
-- Trial outcome comes from `trial.combine(actor_verdict, judge_verdict)`.
-- A trial counts as a reproduction only when the outcome is `CONFIRMED`.
-- Bug-level verdict is `REPRODUCED` when a strict majority of trials are confirmed, so two of
-  three is a reproduction and one of two is not.
-- `stability` is `deterministic` at 0.9 and above, `flaky` from 0.3, `rare` below that, `never`
-  at zero.
-- A confirmed reproduction on a negative control is a false positive and makes the bug-level
-  result incorrect.
+- `trial.combine(actor_verdict, judge_verdict)` decides the outcome of a trial.
+- Only `CONFIRMED` counts as a reproduction.
+- A bug counts as reproduced when a strict majority of its trials are confirmed, so 2 of 3 is a
+  reproduction and 1 of 2 is not.
+- `stability` is `deterministic` at 0.9 and up, `flaky` from 0.3, `rare` below that, `never` at 0.
+- A confirmed reproduction on a negative control is a false positive and makes that result wrong.
 
-## Determinism and replay
+## Replay
 
-`--record` writes every model exchange to `traces/<bug>/t<n>/<actor|judge>/NNN.json` with a
-fingerprint of the prompt. `--provider mock` replays them in call order and prints a warning if
-the fingerprint has drifted, which happens when the prompt code changes but the trace has not
-been re-recorded. CI runs the replay path, so the whole pipeline is exercised on a clean machine
-with no secrets.
+`--record` writes every exchange to `traces/<bug>/t<n>/<actor|judge>/NNN.json` with a fingerprint
+of the prompt. `--provider mock` plays them back in call order and warns if the fingerprint has
+drifted, which happens when I change a prompt without re-recording. CI runs the replay path, so
+the pipeline gets exercised on a clean machine with no secrets.
 
-## Adding a platform
+## Adding another platform
 
-Implement `Driver`: `start`, `stop`, `goto`, `snapshot`, `act`, `act_with_burst`, plus a `url`
-property. `snapshot` must return a dict with `url`, `title`, `viewport`, `scrollY` and a list of
+Implement `Driver`: `start`, `stop`, `goto`, `snapshot`, `act`, `act_with_burst`, and a `url`
+property. `snapshot` returns a dict with `url`, `title`, `viewport`, `scrollY` and a list of
 elements carrying `ref`, `tag`, `text`, `value`, `id`, `testid`, `disabled`, `checked`,
 `clickable`, `editable`, `checkable`, `scrollable`, `fixed`, `path` and a `rect`. Everything
-above the driver, including all three oracles, then works unchanged.
+above the driver, all three oracles included, then works unchanged. An adb and UIAutomator2
+version is the obvious next one.

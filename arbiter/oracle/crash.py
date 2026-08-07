@@ -1,4 +1,3 @@
-"""Runtime-error oracle: uncaught exceptions, console errors and failed requests."""
 from __future__ import annotations
 
 from typing import Dict, List
@@ -12,7 +11,6 @@ class CrashOracle:
     def __init__(self) -> None:
         self.records: List[Dict[str, str]] = []
 
-    # -- collection hooks, wired to Playwright events by the driver ----------
     def on_page_error(self, message: str) -> None:
         self._add("page_error", message, "hard")
 
@@ -32,9 +30,7 @@ class CrashOracle:
             return
         self.records.append({"kind": kind, "message": message.strip()[:500], "severity": severity})
 
-    # -- reporting -----------------------------------------------------------
     def drain(self, step: int) -> List["object"]:
-        """Return signals for everything collected since the last drain."""
         from ..models import Signal
         out = [
             Signal(self.source, r["kind"], r["message"], step, r["severity"], {"raw": r["message"]})

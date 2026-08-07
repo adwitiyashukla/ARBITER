@@ -1,9 +1,3 @@
-"""Reading trials back off disk.
-
-Every trial writes its own trial.json next to its screenshots. That makes the judging
-step replayable on its own: the evidence is durable, so a review can be redone without
-re-driving the browser. It is also what makes `arbiter rejudge` cheap.
-"""
 from __future__ import annotations
 
 import glob
@@ -37,9 +31,6 @@ def _step(d: Dict) -> StepRecord:
                       signals=[_signal(s) for s in d.get("signals") or []])
 
 
-# Public aliases. The demo Space rebuilds StepRecord and Signal objects straight from
-# the trial dictionaries inside results.json, so it can call the real judge payload
-# builder rather than reimplementing it.
 step_from_dict = _step
 signal_from_dict = _signal
 

@@ -1,4 +1,3 @@
-"""Report generation: a self-contained HTML page, a markdown summary and raw JSON."""
 from __future__ import annotations
 
 import html
@@ -11,7 +10,7 @@ from . import cost as cost_mod
 from .models import CONFIRMED, DISPUTED, REJECTED, REPRODUCED, BugResult, dumps
 from .trial import SuiteResult, metrics
 
-PUBLISHED_TRIALS_PER_BUG = 1        # how many trials contribute images to the published report
+PUBLISHED_TRIALS_PER_BUG = 1
 
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8">

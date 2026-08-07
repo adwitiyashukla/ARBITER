@@ -1,4 +1,3 @@
-"""Command line entry point."""
 from __future__ import annotations
 
 import argparse
@@ -84,7 +83,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     print("arbiter {0}".format(__version__))
 
     try:
-        import playwright                                    # noqa: F401
+        import playwright
         print("  [ok]   playwright is installed")
     except ImportError:
         print("  [fail] playwright is missing. Run: pip install -r requirements.txt")

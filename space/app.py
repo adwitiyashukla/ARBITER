@@ -1,14 +1,3 @@
-"""ARBITER demo Space.
-
-Three things are demonstrated here, and all three run the project's real code rather
-than a reimplementation for the demo:
-
-  * the benchmark results, with the evidence each verdict was based on
-  * the frame-difference oracle, live, on a video the visitor supplies
-  * the judge isolation property, checked in front of you on real recorded evidence
-
-Nothing here needs an API key, because none of these paths call a language model.
-"""
 from __future__ import annotations
 
 import html
@@ -23,17 +12,17 @@ import matplotlib
 import numpy as np
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402  (must follow the backend selection)
-from PIL import Image  # noqa: E402
+import matplotlib.pyplot as plt
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from arbiter.benchmark import load_suite  # noqa: E402
-from arbiter.judge import build_payload  # noqa: E402
-from arbiter.oracle.visual import (ACTIVE_RATIO_LIMIT, CONCENTRATION_LIMIT,  # noqa: E402
+from arbiter.benchmark import load_suite
+from arbiter.judge import build_payload
+from arbiter.oracle.visual import (ACTIVE_RATIO_LIMIT, CONCENTRATION_LIMIT,
                                    MOTION_EPS, NOOP_EPS, analyze_burst)
-from arbiter.persist import signal_from_dict, step_from_dict  # noqa: E402
+from arbiter.persist import signal_from_dict, step_from_dict
 
 DATA = os.path.join(HERE, "data")
 REPO = "https://github.com/adwitiyashukla/ARBITER"
@@ -127,7 +116,6 @@ def outcome_kind(outcome: str) -> str:
             "AGREED_NOT_REPRODUCED": "ok", "UNRESOLVED": "mid"}.get(outcome, "dim")
 
 
-# --------------------------------------------------------------------------- overview
 def hero_html() -> str:
     m = METRICS
     cards = [
@@ -157,7 +145,6 @@ def hero_html() -> str:
 
 
 def header_markdown() -> str:
-    """Kept for the self-test: the same headline numbers, as plain text."""
     m = METRICS
     return ("ARBITER: {0}/{1} seeded bugs reproduced, {2}/{3} false positives, "
             "accuracy {4:.0%}, {5} claims to {6} confirmations, ${7:.4f}.").format(
@@ -165,7 +152,6 @@ def header_markdown() -> str:
         m["accuracy"], m["actor_claimed"], m["judge_confirmed"], m["cost"]["usd"])
 
 
-# ---------------------------------------------------------------------- results tab
 def evidence_dir_for(bug_id: str, trial: int = 0) -> str:
     return os.path.join(DATA, "evidence", bug_id, "t{0}".format(trial))
 
@@ -221,7 +207,6 @@ def show_bug(bug_id: str):
     return "".join(parts), gallery
 
 
-# ------------------------------------------------------------- frame difference tab
 def _box_frame(x: int, width: int = 320, height: int = 120) -> np.ndarray:
     f = np.full((height, width), 240, dtype=np.uint8)
     x0 = max(0, min(width - 1, x))
@@ -238,7 +223,6 @@ def example_frames(kind: str):
 
 
 def frames_from_video(path: str):
-    """Sample a clip down to a manageable, evenly spaced burst."""
     cap = cv2.VideoCapture(path)
     if not cap.isOpened():
         return []
@@ -255,7 +239,7 @@ def frames_from_video(path: str):
             if pos in wanted:
                 frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
             pos += 1
-    else:                                     # some containers do not report a frame count
+    else:
         while len(frames) < MAX_ANALYSIS_FRAMES:
             ok, frame = cap.read()
             if not ok:
@@ -292,7 +276,7 @@ def plot_diffs(analysis) -> Image.Image:
     fig.savefig(buf, format="png", facecolor=fig.get_facecolor())
     plt.close(fig)
     buf.seek(0)
-    return Image.open(buf).convert("RGB")     # force the read before the buffer is dropped
+    return Image.open(buf).convert("RGB")
 
 
 def verdict_html(a) -> str:
@@ -354,7 +338,6 @@ def analyse_example(kind: str):
     return analyse(example_frames(kind))
 
 
-# ------------------------------------------------------------- judge isolation tab
 def isolation_view(bug_id: str, trial_label: str):
     bug = BUGS[bug_id]
     idx = max(0, min(len(bug["trials"]) - 1, int(trial_label) - 1))
@@ -407,7 +390,6 @@ def isolation_view(bug_id: str, trial_label: str):
     return actor_html, system + "\n\n" + ("=" * 70) + "\n\n" + user, check_html
 
 
-# ------------------------------------------------------------------- judge audit tab
 def audit_markdown() -> str:
     rows = "".join(
         "<tr><td><span class='arb-code'>{0}</span></td>"
@@ -432,7 +414,6 @@ def audit_markdown() -> str:
         AUDIT["refused"], AUDIT["pairs"], esc(AUDIT["judge_model"]), rows, detail)
 
 
-# ----------------------------------------------------------------------------- app
 with gr.Blocks(title="ARBITER", css=CSS, theme=gr.themes.Base(
         primary_hue="blue", neutral_hue="slate")) as demo:
     gr.HTML(hero_html())

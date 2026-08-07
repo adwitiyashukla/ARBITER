@@ -1,10 +1,3 @@
-"""Rewrite the Results section of README.md from run artifacts.
-
-The point is that no number in the README is typed by a human. Run this after
-`arbiter run` and the README, the HTML report and results.json cannot disagree.
-
-    python tools/inject_results.py [--results docs/results.json] [--readme README.md]
-"""
 from __future__ import annotations
 
 import argparse
@@ -24,8 +17,6 @@ def render(data: dict) -> str:
     seeded = [b for b in data["bugs"] if not b["control"]]
     controls = [b for b in data["bugs"] if b["control"]]
 
-    # Models are read back from what each trial actually used, not from the run config,
-    # so a two-stage run cannot misreport which model produced which verdict.
     trials_all = [t for b in data["bugs"] for t in b["trials"]]
     actor_models = sorted({t["actor_usage"]["model"] for t in trials_all if t["actor_usage"]["model"]})
     judge_models = sorted({t["judge_usage"]["model"] for t in trials_all if t["judge_usage"]["model"]})
@@ -37,17 +28,17 @@ def render(data: dict) -> str:
             fmt(actor_models), fmt(judge_models), cfg.get("trials_per_bug", "?")),
         "",]
     if cfg.get("mode") == "rejudge":
-        note = ("Verdicts were finalised on {0} in a review pass over the evidence the benchmark "
-                "run saved to disk. No actor output was regenerated and no browser was re-driven: "
-                "the judge saw exactly the screenshots, actions and signals the original run "
-                "captured.".format(data.get("started_at", "?")))
+        note = ("The verdicts here were produced on {0} in a second pass over the evidence the "
+                "benchmark run had already saved. Nothing was re-run in the browser and no actor "
+                "output was regenerated, so the judge saw exactly the screenshots, actions and "
+                "signals from the original run.".format(data.get("started_at", "?")))
         if len(judge_models) > 1:
-            note += (" More than one judge model appears above because a model exhausted its "
-                     "daily free-tier quota partway through.")
+            note += (" Two judge models show up because the first one ran out of its daily free "
+                     "quota partway through.")
         if set(judge_models) & set(actor_models):
-            note += (" Actor and judge share a base model here, which free-tier quotas forced. "
-                     "The independence that matters is informational, the judge cannot see the "
-                     "actor's reasoning or verdict, and the audit below tests whether it holds.")
+            note += (" Actor and judge ended up on the same base model, which the free tier "
+                     "forced. The judge still cannot see the actor's reasoning, and the audit "
+                     "below is my attempt to check whether that is enough.")
         lines += [note, ""]
     lines += [
         "| metric | value |",
@@ -77,17 +68,19 @@ def render(data: dict) -> str:
 
     rejected, unresolved = m["judge_rejected"], m["unresolved"]
     if rejected:
-        lines += ["The actor claimed a reproduction {0} times. The judge confirmed {1} and "
-                  "**rejected {2}** as unproven from the evidence. Those {2} would have been "
-                  "counted as successes by any system that lets the acting agent grade its own "
-                  "work.".format(m["actor_claimed"], m["judge_confirmed"], rejected), ""]
+        lines += ["The actor claimed a reproduction {0} times and the judge threw out **{1}** of "
+                  "them as not shown by the evidence. Those {1} would have counted as successes "
+                  "in any setup where the agent grades its own work.".format(
+                      m["actor_claimed"], rejected), ""]
     else:
-        lines += ["The judge rejected none of the {0} claims the actor made on this run, so on "
-                  "this benchmark the actor did not overclaim.".format(m["actor_claimed"]), ""]
+        lines += ["The judge did not reject any of the {0} claims the actor made, so on this "
+                  "benchmark the actor never overclaimed. That is a nice result and also a gap "
+                  "in the evidence, which is what the audit below is for.".format(
+                      m["actor_claimed"]), ""]
     if unresolved:
-        lines += ["{0} trial(s) are recorded as unresolved, meaning the judge returned "
-                  "INCONCLUSIVE or could not be reached. They are counted as non-reproductions, "
-                  "never as successes.".format(unresolved), ""]
+        lines += ["{0} trial(s) came out unresolved, meaning the judge said INCONCLUSIVE or "
+                  "could not be reached. Those count as non-reproductions, never as "
+                  "successes.".format(unresolved), ""]
 
     lines += ["### Per report", "",
               "| report | category | ground truth | verdict | reproduced in | stability | actor claimed / judge confirmed |",
@@ -108,10 +101,9 @@ def render(data: dict) -> str:
 
 def render_audit(a: dict) -> str:
     lines = [
-        "A judge that confirms everything is worth nothing. This check takes the evidence "
-        "captured for one bug and asks the judge to review it against a **different** bug's "
-        "report, which that evidence cannot support. Judge model `{0}`.".format(
-            a.get("judge_model", "?")),
+        "A judge that agrees with everything is worth nothing, so this check hands it the "
+        "evidence from one bug together with a **different** bug's report, which that evidence "
+        "cannot possibly support. Judge model `{0}`.".format(a.get("judge_model", "?")),
         "",
         "**{0} of {1} mismatched pairs correctly refused.**".format(a["refused"], a["pairs"]),
         "",
@@ -124,8 +116,8 @@ def render_audit(a: dict) -> str:
             "correctly refused" if r["refused"] else "**rubber stamped**"))
     lines.append("")
     if a.get("rubber_stamped"):
-        lines += ["{0} pair(s) were confirmed against evidence that cannot support them, which "
-                  "is a real weakness of the current judge prompt.".format(a["rubber_stamped"]), ""]
+        lines += ["{0} pair(s) got confirmed against evidence that cannot support them, which is "
+                  "a real weakness in the judge prompt.".format(a["rubber_stamped"]), ""]
     return "\n".join(lines)
 
 

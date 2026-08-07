@@ -39,7 +39,7 @@ to.addEventListener('input',()=>{
       c.style.cssText='background:#e5e7eb;border-radius:12px;padding:4px 10px';
       chips.appendChild(c);
       sug.innerHTML='';
-      // SEEDED BUG: the chip is added but the typed fragment is never cleared from the input.
+      // SEEDED BUG: input is never cleared after the chip is added
     };
     sug.appendChild(li);
   });

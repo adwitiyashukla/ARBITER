@@ -1,12 +1,3 @@
-"""Exercise the Space's logic without installing Gradio or opening a browser.
-
-Gradio is stubbed out, so `app.py` imports cleanly and every callback the UI wires up can
-be called directly against the real data that ships with the Space. Run this against a
-built Space directory before pushing it:
-
-    python tools/build_space.py --out ../hf-arbiter
-    python space/selftest.py --space ../hf-arbiter
-"""
 from __future__ import annotations
 
 import argparse
@@ -26,7 +17,6 @@ def check(ok: bool, label: str, detail: str = "") -> None:
 
 
 def install_gradio_stub() -> None:
-    """A stand-in that satisfies every Gradio call app.py makes at import time."""
 
     class Any:
         def __init__(self, *a, **k):
@@ -45,7 +35,6 @@ def install_gradio_stub() -> None:
             return Any()
 
     class StubModule(types.ModuleType):
-        """Any attribute at all resolves, so the stub cannot fall behind app.py."""
 
         def __getattr__(self, name):
             return Any()

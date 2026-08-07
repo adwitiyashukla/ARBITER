@@ -105,7 +105,7 @@ def test_rate_limiter_spaces_calls():
         status_code = 200
         headers = {}
 
-    base.set_rate_limit(600)          # 100 ms apart
+    base.set_rate_limit(600)
     base._last_call_at = 0.0
     start = time.monotonic()
     for _ in range(3):
