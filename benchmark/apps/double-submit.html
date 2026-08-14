@@ -26,7 +26,6 @@ li{display:flex;justify-content:space-between;align-items:center;padding:10px;bo
 const entries=[];
 document.getElementById('submit').addEventListener('click',()=>{
   const v=document.getElementById('note').value;
-  // SEEDED BUG: no in-flight guard
   setTimeout(()=>{
     entries.push(v);
     const ul=document.getElementById('entries'); ul.innerHTML='';

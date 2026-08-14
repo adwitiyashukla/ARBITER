@@ -142,8 +142,7 @@ def build(out_dir: str, clean: bool) -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, help="the Space checkout to build into")
     ap.add_argument("--no-clean", action="store_true",
                     help="keep files already in the destination trees")

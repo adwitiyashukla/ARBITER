@@ -138,8 +138,8 @@ def hero_html() -> str:
   <div class="arb-cards">{0}</div>
   <p style="font-size:13px;color:#94a3b8;margin-top:10px">
     Every tab below runs the project's own code, with no API key, because none of these paths
-    call a language model. &nbsp;·&nbsp;
-    <a href="{1}">Source</a> &nbsp;·&nbsp; <a href="{2}">Full HTML report</a>
+    call a language model. &nbsp;|&nbsp;
+    <a href="{1}">Source</a> &nbsp;|&nbsp; <a href="{2}">Full HTML report</a>
   </p>
 </div>""".format(card_html, REPO, PAGES)
 
@@ -164,8 +164,8 @@ def show_bug(bug_id: str):
 
     parts = ['<div class="arb-panel">',
              "<h2>{0}</h2>".format(esc(spec.title if spec else bug_id)),
-             '<div class="arb-meta"><span class="arb-code">{0}</span> &nbsp;·&nbsp; {1} '
-             "&nbsp;·&nbsp; ground truth: {2} &nbsp;·&nbsp; {3}</div>".format(
+             '<div class="arb-meta"><span class="arb-code">{0}</span> &nbsp;|&nbsp; {1} '
+             "&nbsp;|&nbsp; ground truth: {2} &nbsp;|&nbsp; {3}</div>".format(
                  esc(bug_id), esc(bug["category"]), esc(truth),
                  pill(bug["verdict"].lower().replace("_", " "), verdict_kind))]
     if spec and spec.pattern:

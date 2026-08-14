@@ -10,10 +10,6 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
-
-# Full evidence for local runs is large. The published subset lives in docs/evidence.
-evidence/
-!evidence/.gitkeep
-
-# Playwright videos
+/evidence/
+/docs/summary.md
 *.webm

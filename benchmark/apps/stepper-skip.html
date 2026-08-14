@@ -31,7 +31,6 @@ let q=1;
 const out=document.getElementById('qty');
 function paint(){out.textContent=q;}
 document.getElementById('inc').onclick=()=>{
-  // SEEDED BUG: off-by-one, 2 jumps to 4
   q = (q===2) ? q+2 : q+1;
   paint();
 };

@@ -34,7 +34,6 @@ const ov=document.getElementById('overlay');
 document.getElementById('openBtn').onclick=()=>ov.style.display='block';
 document.getElementById('cancelBtn').onclick=()=>ov.style.display='none';
 document.getElementById('saveBtn').onclick=()=>ov.style.display='none';
-// SEEDED BUG: handler on the dialog, not the X button
 document.getElementById('dialog').addEventListener('click',e=>{ e.stopPropagation(); });
 document.getElementById('closeX').addEventListener('click',e=>{ e.preventDefault(); });
 </script></body></html>

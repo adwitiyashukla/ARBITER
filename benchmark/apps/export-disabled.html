@@ -30,7 +30,6 @@ li{display:flex;justify-content:space-between;align-items:center;padding:10px;bo
 </div>
 </main><script>
 document.getElementById('advanced').addEventListener('change',e=>{
-  // SEEDED BUG: '.advanced-option' matches nothing
   document.querySelectorAll('.advanced-option').forEach(el=>{ el.disabled = !e.target.checked; });
 });
 document.getElementById('exportBtn').onclick=()=>alert('Exported');

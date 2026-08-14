@@ -28,7 +28,6 @@ document.getElementById('toggle').onclick=()=>{
   if(busy) return; busy=true;
   const target = open ? -300 : 0;
   let pos = open ? 0 : -300;
-  // SEEDED BUG: 150ms timer, 100px jumps, blocks the main thread
   const step=()=>{
     pos += open ? -100 : 100;
     if((!open && pos>=target)||(open && pos<=target)){ pos=target; }

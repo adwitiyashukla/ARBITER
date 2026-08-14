@@ -54,8 +54,8 @@ PAGE = """<!doctype html>
 </style></head><body><div class="wrap">
 <h1>ARBITER</h1>
 <div class="sub">Automated Reproduction of Bugs with Independent Trial Evidence Review<br>
-run %%STARTED%% &middot; actor <code>%%ACTOR%%</code> &middot; judge <code>%%JUDGE%%</code>
-&middot; %%TRIALS%% trial(s) per report &middot; %%DURATION%%s</div>
+run %%STARTED%% | actor <code>%%ACTOR%%</code> | judge <code>%%JUDGE%%</code>
+| %%TRIALS%% trial(s) per report | %%DURATION%%s</div>
 %%CARDS%%
 <h2>Per report</h2>
 %%TABLE%%
@@ -139,7 +139,7 @@ def _details(suite: SuiteResult, out_dir: str) -> str:
             hard = [s for s in t.signals if s.severity == "hard"]
             outcome_class = {CONFIRMED: "ok", REJECTED: "no", DISPUTED: "mid"}.get(t.outcome, "mid")
             trials_html.append(
-                '<div class="trial"><div>{0} &middot; {1} step(s) &middot; {2:.0f}s</div>'
+                '<div class="trial"><div>{0} | {1} step(s) | {2:.0f}s</div>'
                 '<div class="muted">actor said <b>{3}</b>: {4}</div>'
                 '<div class="muted">judge said <b>{5}</b> (confidence {6:.2f}): {7}</div>'
                 '<div class="sig">{8}</div>{9}</div>'.format(

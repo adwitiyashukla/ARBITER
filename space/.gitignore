@@ -1,4 +1,3 @@
-# Importing the app compiles the vendored package in place, which is not worth committing.
 __pycache__/
 *.py[cod]
 .DS_Store
