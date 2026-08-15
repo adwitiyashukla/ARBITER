@@ -68,7 +68,7 @@ def render(data: dict) -> str:
 
     rejected, unresolved = m["judge_rejected"], m["unresolved"]
     if rejected:
-        lines += ["The actor claimed a reproduction {0} times and the judge threw out **{1}** of "
+        lines += ["The actor claimed a reproduction {0} times and the judge threw out {1} of "
                   "them as not shown by the evidence. Those {1} would have counted as successes "
                   "in any setup where the agent grades its own work.".format(
                       m["actor_claimed"], rejected), ""]
@@ -102,10 +102,10 @@ def render(data: dict) -> str:
 def render_audit(a: dict) -> str:
     lines = [
         "A judge that agrees with everything is worth nothing, so this check hands it the "
-        "evidence from one bug together with a **different** bug's report, which that evidence "
+        "evidence from one bug together with a different bug's report, which that evidence "
         "cannot possibly support. Judge model `{0}`.".format(a.get("judge_model", "?")),
         "",
-        "**{0} of {1} mismatched pairs correctly refused.**".format(a["refused"], a["pairs"]),
+        "{0} of {1} mismatched pairs correctly refused.".format(a["refused"], a["pairs"]),
         "",
         "| evidence from | judged against | verdict | outcome |",
         "|---|---|---|---|",

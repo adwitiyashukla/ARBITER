@@ -19,22 +19,22 @@ looks at the screenshots and the instrumentation logs and decides whether the bu
 up. The second model never sees what the first one was thinking, so it cannot just take the first
 one's word for it.
 
-I built this for my master's, after reading a friend's work on LLM agents that reproduce Android
-bug reports and getting stuck on one thing: the agent doing the clicking is also the thing that
-decides whether the clicking worked.
+I built this for my master's, after reading about LLM agents that reproduce Android bug reports
+and getting stuck on one thing: the agent doing the clicking is also the thing that decides
+whether the clicking worked.
 
 This Space runs the parts that need no API key, which happen to be the parts worth showing:
 
-- **Benchmark results.** All ten reports, including two negative controls whose reports describe
+- Benchmark results. All ten reports, including two negative controls whose reports describe
   bugs that do not exist, with each trial's judge reasoning and the screenshots behind it.
-- **The frame-difference oracle, live.** Drop in any screen recording and the real oracle runs on
+- The frame-difference oracle, live. Drop in any screen recording and the real oracle runs on
   it, the same numpy and OpenCV code the pipeline uses. It tells a smooth transition apart from a
   janky one by measuring how concentrated the pixel change is, which is a bug class the DOM cannot
   show you because the DOM looks identical either way.
-- **Judge isolation, checked in front of you.** Pick any recorded trial. The payload is built on
+- Judge isolation, checked in front of you. Pick any recorded trial. The payload is built on
   the spot by the project's own `build_payload`, and the panel next to it checks that the actor's
   written conclusion appears nowhere inside.
-- **An audit of the judge.** Each run's evidence reviewed against a different bug's report, which
+- An audit of the judge. Each run's evidence reviewed against a different bug's report, which
   it cannot support. If the judge agreed with everything, this is where it would show.
 
 My run: 8 of 8 seeded bugs reproduced, 0 false positives on the 2 controls, 30 trials, about 11

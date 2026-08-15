@@ -1,44 +1,49 @@
 # ARBITER
 
-**Automated Reproduction of Bugs with Independent Trial Evidence Review**
+Automated Reproduction of Bugs with Independent Trial Evidence Review
 
 [![CI](https://github.com/adwitiyashukla/ARBITER/actions/workflows/ci.yml/badge.svg)](https://github.com/adwitiyashukla/ARBITER/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Demo](https://img.shields.io/badge/demo-Hugging%20Face%20Space-ffbd45.svg)](https://huggingface.co/spaces/adwitiyashukla/ARBITER)
 
-ARBITER takes a bug report, opens a real browser, and tries to reproduce it. Then a second model
-looks at the screenshots and the instrumentation logs and decides whether the bug actually
-showed up. The second model never sees what the first one was thinking, so it cannot just take
-the first one's word for it.
+ARBITER reads a bug report, opens a real browser and tries to reproduce it. Then a second model
+looks at the screenshots and the instrumentation logs and decides whether the bug actually showed
+up. The second model never sees what the first one was thinking, so it cannot just take the first
+one's word for it.
 
-You can [try it in the browser](https://huggingface.co/spaces/adwitiyashukla/ARBITER) without
-installing anything.
+There is a live demo at https://huggingface.co/spaces/adwitiyashukla/ARBITER that needs no install
+and no API key, and the full report from my run is at https://adwitiyashukla.github.io/ARBITER/.
 
-## Why I built this
+## Why I did not build the obvious version
 
-A friend of mine works on an LLM agent that reproduces Android bug reports, and while reading
-through his results I kept getting stuck on the same thing. The agent that does the clicking is
-also the thing that decides whether the clicking worked. It follows the steps in the report,
-nothing explodes, and it says "reproduced". But following the steps and actually seeing the bug
-are two different things, and there is nothing in that setup that can tell them apart.
+The obvious version of this is one agent that reads the steps, clicks through them, and tells you
+whether it worked. It demos well. I think it measures almost nothing.
 
-He handled it by auditing his own results by hand, which is the honest thing to do, but it does
-not scale and it is not something the system does for you. So I wanted to try building it the
-other way round: make the checking a separate component that only ever sees evidence, and see
-what falls out.
+I got into this after reading about automated bug reproduction online, and I kept getting stuck on
+the same thing in everything I read. The agent doing the clicking is also the thing that decides
+whether the clicking worked. It follows the steps in the report, nothing explodes, and it says
+"reproduced". But following the steps and actually seeing the bug are two different things, and
+there is nothing in that setup that can tell them apart. The usual answer is that someone goes
+through the results by hand afterwards, which is the right thing to do, and it does not scale, and
+it is not something the system does for you.
 
-Two other things bothered me about how these systems usually get evaluated:
+The ReBL paper from ISSTA 2024 is where I read the most about this. Its section on why their
+reproductions failed is what pointed me at the two gaps I went after: UI elements the accessibility
+tree cannot see, and symptoms subtle enough that an agent declares success without ever having
+looked at them. AdbGPT from ICSE 2024 sits in the same space. Both are Android and this is web, so
+none of my numbers should be read against theirs. They shaped the design, they are not baselines.
 
-- They run each bug once. One successful run is not really reproduction, it is one sample.
-- They only test bug reports that are real. Nobody checks what happens when you hand the agent a
-  report describing a bug that does not exist, which is a thing that happens constantly on real
-  issue trackers.
+So I built it the other way round. The checking is a separate component that only ever sees
+evidence, and I wanted to find out what falls out of that.
 
-So this version runs every report several times and reports how often it worked, and two of the
-ten reports in my benchmark are deliberately wrong.
+Two other things bothered me about how these systems get scored:
 
-## How it works
+- They run each report once. One successful run is not reproduction, it is one sample.
+- They only test reports that are true. Nobody checks what happens when you hand the agent a report
+  describing a bug that is not there, which happens constantly on real issue trackers.
+
+So every report runs several times and I report how often it worked, and two of the ten reports in
+my benchmark are wrong on purpose.
+
+## How the two halves work
 
 ```mermaid
 flowchart TD
@@ -59,73 +64,82 @@ flowchart TD
     RES --> REP["HTML report, results.json, flakiness, cost"]
 ```
 
-**The actor** gets each screen two ways: as a numbered list of elements with their flags and
-pixel boxes, and as the same screenshot with colour-coded boxes drawn on top, so element `#7` in
-the text is something it can actually point at. It replies with one JSON action from a fixed
-list of 15. The prompt tells it that running the steps is not the same as seeing the symptom,
-and that some of the reports it will get are wrong.
+### The actor
 
-**The judge** gets the bug report, the actions that were executed with their results, the signals
-the instrumentation recorded, the final page state, and up to four raw screenshots picked around
-the strongest signals. It does not get the actor's reasoning or its verdict. Its prompt tells it
-to be hard to convince, and that INCONCLUSIVE is a real answer rather than a cop-out.
+The actor gets each screen two ways. One is a numbered list of up to 60 visible elements with their
+flags and pixel boxes. The other is the same screenshot with colour coded boxes drawn on top, so
+element `#7` in the text is something it can actually point at. It replies with one JSON action
+from a fixed list of 15, and the parser rejects anything that is not in that list or is missing an
+argument. Its prompt tells it that running the steps is not the same as seeing the symptom, and
+that some of the reports it will get are wrong.
 
-Then the two verdicts get combined, and this table is where the honesty actually comes from:
+### The judge
+
+The judge gets the bug report, the actions that were executed with their result strings, the
+signals the instrumentation recorded, the final page state, and up to four raw screenshots picked
+around the strongest signals. It does not get the actor's reasoning or its verdict. Its prompt
+tells it to be hard to convince, and that INCONCLUSIVE is a real answer rather than a way out.
+
+The screenshots it sees are the raw ones, not the annotated ones. The overlay exists to help the
+actor address elements, and showing the judge a pre-interpreted view of the screen would drag the
+actor's framing into what is supposed to be a fresh look.
+
+### Combining them
 
 | actor says | judge says | outcome | counts as a reproduction |
 |---|---|---|---|
 | REPRODUCED | REPRODUCED | `CONFIRMED` | yes |
-| REPRODUCED | NOT_REPRODUCED | `REJECTED` | no, and it gets counted as an overclaim |
+| REPRODUCED | NOT_REPRODUCED | `REJECTED` | no, and it is counted as an overclaim |
 | NOT_REPRODUCED | REPRODUCED | `DISPUTED` | no, but flagged so I can look at it |
 | NOT_REPRODUCED | NOT_REPRODUCED | `AGREED_NOT_REPRODUCED` | no |
 | anything | INCONCLUSIVE | `UNRESOLVED` | no |
 
-### The isolation test, and the bug it found on day one
-
-The whole thing falls apart if the actor's opinion leaks into the judge's prompt, so I wrote a
-test for it (`tests/test_judge_isolation.py`). It checks two things: that the function which
-builds the judge's payload has no parameter that could even carry the actor's verdict, and that
-a sentinel string from the actor never shows up in the rendered text.
-
-It failed the first time I ran it. The actor ends its run with a `finish` action, and that action
-carries its verdict and its written reason as arguments, and I was passing the whole action log
-to the judge. So the judge could read the actor's conclusion in the action list. The core claim
-of the project had a hole in it about an hour after I wrote the core of the project. `finish` is
-now stripped from everything the judge sees, and the test is in CI so it stays that way.
+A report counts as reproduced when a strict majority of its trials are confirmed, so 2 of 3 is a
+reproduction and 1 of 2 is not.
 
 ## The three oracles
 
-None of these decide whether a bug was reproduced. They just report facts about what happened.
-Deciding whether those facts match the report is the judge's job, and keeping that split clean
-was one of the more useful design decisions I made.
+None of these decide whether a bug was reproduced. They report facts about what happened. Deciding
+whether those facts match the report is the judge's job, and keeping that split clean was one of
+the more useful decisions I made.
 
-**Crash oracle.** Uncaught exceptions, `console.error`, failed requests, 5xx responses. Straight
-off the Playwright event stream, nothing clever.
+### Crash oracle
 
-**Visual oracle** (`arbiter/oracle/visual.py`). This is the part I had the most fun with. Around
-every action the driver grabs 12 frames at roughly 80 ms with a timestamp on each. The frames get
-turned to grayscale, downscaled to 320 px wide, and reduced to a list of mean absolute
-differences between consecutive frames. Then:
+Uncaught exceptions, `console.error`, failed requests, 5xx responses. Straight off the Playwright
+event stream, nothing clever.
 
-- *no-op*: the first and last frame differ by less than 0.002, so nothing happened. This is what
+### Visual oracle
+
+This is the part I had the most fun with. Around every action the driver grabs 12 frames at roughly
+80 ms with a timestamp on each. The frames get turned to grayscale, downscaled to 320 px wide, and
+reduced to a list of mean absolute differences between consecutive frames. From that:
+
+- No-op: the first and last frame differ by less than 0.002, so nothing happened. This is what
   catches a button that renders fine and does nothing when you click it.
-- *stepped animation*: at least two frames moved, the two busiest frames account for 60% or more
-  of all the pixel change, and fewer than half the frame pairs moved at all. A real CSS transition
-  spreads its change out evenly and scores around 0.2 on that concentration measure. A
-  hand-rolled `setTimeout` animation dumps everything into two or three frames and scores above
-  0.8. The DOM looks identical in both cases, which is why a DOM-only tool cannot see this class
-  of bug at all.
-- *instant change*: exactly one frame moved. I specifically do **not** flag this as jank, because
-  a UI update that was never animated is not an animation bug. This took me a couple of tries to
-  get right, and it has its own test, because a jank detector that fires on every instant update
-  is useless.
-- *capture stall*: the gap between two screenshots blew past 250 ms, which usually means the page
+- Stepped animation: at least two frames moved, the two busiest frames account for 60 percent or
+  more of all the pixel change, and fewer than half the frame pairs moved at all. A real CSS
+  transition spreads its change out evenly and scores around 0.2 on that concentration measure. A
+  hand rolled `setTimeout` animation dumps everything into two or three frames and scores above
+  0.8. The DOM looks identical in both cases, which is why a DOM-only tool cannot see this class of
+  bug at all.
+- Instant change: exactly one frame moved, and I deliberately do not flag it as jank. A UI update
+  that was never animated is not an animation bug.
+- Capture stall: the gap between two screenshots went past 250 ms, which usually means the page
   blocked the main thread.
 
-**DOM oracle.** A readable diff of the element map before and after each action (what appeared,
-what vanished, what text or value or disabled state changed), plus geometry checks for pinned
-elements sitting on top of content. Ancestors and containment are excluded so a header does not
-get reported for covering its own logo.
+### DOM oracle
+
+A readable diff of the element map before and after each action: what appeared, what vanished, what
+text or value or disabled state changed. Plus geometry checks for pinned elements sitting on top of
+content. Ancestors and containment are excluded so a header does not get reported for covering its
+own logo, and anything covering more than 60 percent of the viewport is treated as a backdrop and
+skipped.
+
+The overlap signal is the noisiest of the three and I have not fixed it properly. On `drawer-jank`
+it reports the open drawer covering the button behind it, which is what an open drawer is supposed
+to do. It never changed a verdict, because the judge weighs signals against the report rather than
+treating any one of them as proof, but it is a false signal source and a stricter rule belongs on
+it.
 
 ## The benchmark
 
@@ -134,30 +148,31 @@ whole thing runs offline and cannot break because some website changed. Each app
 planted defect. The agent never sees the source, only the rendered DOM, the screenshots and the
 issue text.
 
-Planting the bugs yourself is the normal approach for this kind of evaluation (Defects4J and
-BugsInPy both work this way), and it is the only way to have exact ground truth. It also makes
-things easier than the real world, which I say again in the limitations.
-
 | report | category | what is wrong | ground truth |
 |---|---|---|---|
 | `todo-crash` | crash | null dereference once the list empties | bug |
 | `modal-close` | unresponsive control | handler on the wrong node, so the X renders but does nothing | bug |
-| `drawer-jank` | animation jank | timer-based animation that jumps and blocks the main thread | bug |
+| `drawer-jank` | animation jank | timer based animation that jumps and blocks the main thread | bug |
 | `contact-residue` | state residue | typed fragment left behind next to the contact chip | bug |
 | `export-disabled` | disabled control | wrong selector, so four dropdowns never unlock | bug |
-| `stepper-skip` | logic | off-by-one, quantity goes 2 then 4 | bug |
+| `stepper-skip` | logic | off by one, quantity goes 2 then 4 | bug |
 | `double-submit` | race condition | no in-flight guard, so a double click files twice | bug |
-| `header-overlap` | responsive layout | hard-coded spacer under a header that wraps when narrow | bug |
-| `search-filter-ok` | **negative control** | nothing at all. The filter is correctly case-insensitive | no bug |
-| `theme-persist-ok` | **negative control** | nothing at all. The theme survives switching tabs | no bug |
+| `header-overlap` | responsive layout | hard coded spacer under a header that wraps when narrow | bug |
+| `search-filter-ok` | negative control | nothing at all, the filter is correctly case insensitive | no bug |
+| `theme-persist-ok` | negative control | nothing at all, the theme survives switching tabs | no bug |
 
 The two controls are the part I am most glad I included. Their reports confidently describe
 symptoms that are not there, and an agent that wants to be helpful will happily go and find them.
-If it "reproduces" one of those, that is a false positive and it counts against the score.
+Reproducing one of those is a false positive and it counts against the score.
 
-The bug categories are not invented either. Residual text sitting next to a committed contact
-chip, controls that render but stay permanently disabled, a fixed header colliding with content
-on a narrow screen: these are all shapes I found while reading through real issue trackers.
+The bug categories are not invented either. Residual text sitting next to a committed contact chip,
+controls that render but stay permanently disabled, a fixed header colliding with content on a
+narrow screen: these are all shapes I found while reading through real issue trackers. Planting the
+bugs yourself is the normal approach for this kind of evaluation, Defects4J and BugsInPy both work
+this way, and it is the only way to have exact ground truth.
+
+Cross-origin flows and anything behind a login are out of scope, which is the same limit the
+Android papers report.
 
 ## Results
 
@@ -202,18 +217,31 @@ The judge did not reject any of the 24 claims the actor made, so on this benchma
 | `todo-crash` | crash | bug | reproduced (correct) | 3/3 | deterministic | 3 / 3 |
 <!-- RESULTS:END -->
 
-The full report, with every trial's judge reasoning and the screenshots each verdict was based
-on, is at [adwitiyashukla.github.io/ARBITER](https://adwitiyashukla.github.io/ARBITER/).
+Everything in that table is 100 percent, so it is worth saying what it does not prove. I planted
+these bugs myself, which gives exact ground truth and lets the suite run offline, and it also makes
+the job easier than a real issue tracker. Ten reports is a small sample and the percentages have
+wide error bars. Because the actor never overclaimed here, I have no live example of the rejection
+path firing on real actor output. That path has unit tests, and the check in the next section is
+the closest thing I have to evidence that the judge discriminates, but getting a real overclaim
+rate needs a harder benchmark than mine.
 
-Nothing in this section is typed by hand. `tools/inject_results.py` regenerates it from the run
+Both sides landing on the same base model was the free tier's doing rather than a design choice,
+and the separation doing the work here is informational rather than architectural. Pointing
+`--judge-provider` at a different vendor fixes it and needs no code change.
+
+The dollar figure uses Google's paid tier prices as of 2026-08-02 even though I ran on the free
+tier. The token counts come from the API usage data and are exact, so the number is what that
+traffic would have cost if I had been billed.
+
+Nothing in that section is typed by hand. `tools/inject_results.py` regenerates it from the run
 artifacts, so the README cannot quietly drift away from the data.
 
-### Auditing the judge
+## Checking that the judge is not just agreeing
 
 <!-- AUDIT:START -->
-A judge that agrees with everything is worth nothing, so this check hands it the evidence from one bug together with a **different** bug's report, which that evidence cannot possibly support. Judge model `gemini-3.5-flash-lite`.
+A judge that agrees with everything is worth nothing, so this check hands it the evidence from one bug together with a different bug's report, which that evidence cannot possibly support. Judge model `gemini-3.5-flash-lite`.
 
-**8 of 8 mismatched pairs correctly refused.**
+8 of 8 mismatched pairs correctly refused.
 
 | evidence from | judged against | verdict | outcome |
 |---|---|---|---|
@@ -227,13 +255,64 @@ A judge that agrees with everything is worth nothing, so this check hands it the
 | `todo-crash` | `contact-residue` | NOT_REPRODUCED | correctly refused |
 <!-- AUDIT:END -->
 
-I added this because I realised my results did not actually prove the judge was doing anything.
-It confirmed all 24 of the actor's claims, and a judge that agrees with everything is worth
-exactly nothing. So this check feeds it the evidence from one bug together with a completely
-different bug's report and sees whether it notices. It costs one model call per bug and reuses
-evidence that is already on disk.
+I added this because the results on their own did not prove the judge was doing anything. It costs
+one model call per report and reuses evidence that is already on disk, so it is cheap to run again
+after any prompt change.
 
-## Running it yourself
+The one INCONCLUSIVE is `header-overlap` evidence put against the `modal-close` report. There the
+judge said the evidence did not settle the question rather than saying the symptom was absent, and
+that still counts as a refusal, because the only wrong answer would have been REPRODUCED.
+
+The judge is a language model and it can be wrong in either direction. What I can claim is that it
+is independent and has to point at specific evidence, not that it is right.
+
+## Things I got wrong
+
+Three are worth writing up.
+
+### The judge could read the actor's conclusion
+
+The whole thing falls apart if the actor's opinion leaks into the judge's prompt, so I wrote a test
+for it in `tests/test_judge_isolation.py`. It checks two things: that the function which builds the
+judge's payload has no parameter that could even carry the actor's verdict, and that a sentinel
+string from the actor never shows up in the rendered text.
+
+It failed the first time I ran it. The actor ends its run with a `finish` action, and that action
+carries its verdict and its written reason as arguments, and I was passing the whole action log to
+the judge. So the judge could read the actor's conclusion in the action list. The core claim of the
+project had a hole in it about an hour after I wrote the core of the project. `finish` is now
+stripped from everything the judge sees, and the test is in CI so it stays that way.
+
+### My jank detector called every instant update a bug
+
+My first version of the visual oracle only asked whether the pixel change was concentrated in a
+couple of frames. That is true of a janky animation, and it is also true of a button that just
+swaps some text, because a single instant update puts 100 percent of the change into one frame.
+So the oracle fired on almost every action and the signal was worthless.
+
+The fix was to separate the two cases explicitly. One frame moving is an instant change and is not
+reported. Two or more frames moving with the change concentrated in the busiest two, and with most
+frame pairs sitting still, is a stepped animation. `test_visual_oracle.py` now pins all three cases
+down, including the one asserting that a smooth slide is not flagged, because a jank detector that
+cries wolf on every update is worse than not having one.
+
+### The report page was broken for everyone except me
+
+My published report renders 20 screenshots of the evidence each verdict was based on, and locally
+it looked perfect. It was broken on GitHub Pages for two weeks and I did not notice.
+
+The cause was one missing character in `.gitignore`. I had written `evidence/` to keep the large
+local run output out of the repository. Git matches a pattern like that at any depth, so it also
+silently excluded `docs/evidence/`, which is the small published subset the report actually points
+at. The images were never committed. Everything looked right on my machine because the files were
+sitting there on disk.
+
+I only caught it by comparing what the report references against what `git ls-files` actually
+tracks, rather than by opening the page. The pattern is now anchored as `/evidence/`, and the
+lesson I took is that checking the artifact you published is a different job from checking the
+artifact you built.
+
+## Running it
 
 ```bash
 git clone https://github.com/adwitiyashukla/ARBITER.git
@@ -241,11 +320,12 @@ cd ARBITER
 pip install -r requirements.txt
 python -m playwright install chromium
 
-cp .env.example .env      # paste a free Gemini key from https://aistudio.google.com/apikey
+cp .env.example .env
 ```
 
-Before spending any tokens, check the machine. This drives three of the benchmark apps with
-hard-coded clicks and asserts that every oracle fires, and it needs no API key:
+Put a free Gemini key from https://aistudio.google.com/apikey into `.env`. Before spending any
+tokens, check the machine. This drives three of the benchmark apps with hard coded clicks and
+asserts that every oracle fires, and it needs no API key:
 
 ```bash
 python -m arbiter smoke
@@ -261,7 +341,7 @@ python -m arbiter run --trials 3 --record
 | flag | what it does |
 |---|---|
 | `--only todo-crash,drawer-jank` | run a subset |
-| `--trials N` | how many times to repeat each report, which is what gives you the flakiness score |
+| `--trials N` | repeats per report, which is what gives you the flakiness score |
 | `--headed` | watch the browser do it |
 | `--video` | save a webm of each trial |
 | `--rpm 8` | slow the requests down to stay under a free tier limit |
@@ -269,10 +349,9 @@ python -m arbiter run --trials 3 --record
 | `--provider mock` | replay `traces/` with no key and no network |
 | `--judge-model gemini-3.1-pro-preview` | a stronger, different judge |
 
-The actor defaults to `gemini-3.5-flash-lite` and the judge to `gemini-3.5-flash`, both free
-tier. The actor makes roughly ten calls per trial and the judge exactly one, so the actor sits on
-whichever model has the most headroom. If you have credit somewhere, pointing `--judge-provider`
-at a different vendor makes the whole thing stronger and needs no code change.
+The actor defaults to `gemini-3.5-flash-lite` and the judge to `gemini-3.5-flash`, both free tier.
+The actor makes roughly ten calls per trial and the judge exactly one, so the actor sits on
+whichever model has the most headroom.
 
 Free tiers throttle hard, which I found out the annoying way, so `--rpm` paces the requests from
 the client side instead of only backing off after a 429. There is also a circuit breaker: after
@@ -283,11 +362,16 @@ Because the judging is separate from the acting, two commands work on evidence t
 saved and never touch the browser:
 
 ```bash
-python -m arbiter rejudge --all --record   # review saved evidence again, or with another model
-python -m arbiter judge-audit              # the mismatched-report check above
+python -m arbiter rejudge --all --record
+python -m arbiter judge-audit
 ```
 
-## Replaying my run with no API key
+That separation paid off in a way I had not planned. Partway through my benchmark run the judging
+model hit its daily quota, so I finished the verdicts afterwards with `rejudge` over the exact
+evidence the run had already captured. No actor output was regenerated and no browser was
+re-driven.
+
+### Replaying my run with no API key
 
 `--record` writes every request and reply into `traces/`, so anyone can replay the exact run:
 
@@ -298,64 +382,48 @@ python -m arbiter run --provider mock --trials 1
 CI does this on every push, which means the whole pipeline gets exercised on a clean machine with
 no secrets, and my published numbers can be re-derived instead of taken on trust.
 
-## Things I know are wrong with it
+## What is in the repo
 
-A results table without this section is not worth much, so:
+```
+arbiter/
+  driver/       browser control, the only Playwright aware code
+  llm/          gemini, openai, anthropic, plus record and replay
+  oracle/       crash, visual, dom
+  perception.py DOM to element map, plus the annotated screenshot
+  actions.py    the 15 actions, one source of truth for prompt, driver and tests
+  agent.py      the actor loop
+  judge.py      builds the evidence payload, parses the verdict
+  trial.py      N trials, the combination rule, suite metrics
+  report.py     writes index.html and results.json
+benchmark/
+  apps/         ten self contained web apps, one planted defect each
+  bugs/         the ten reports, with ground truth and step budgets
+docs/           the published report and the evidence behind it
+space/          the Hugging Face demo
+tests/          44 tests
+tools/          build the Space, regenerate the README results block
+traces/         every recorded model exchange, for offline replay
+```
 
-- **I planted the bugs myself.** That gives exact ground truth and a suite that runs offline, and
-  it also makes the job easier than the real world. It measures whether the pipeline works, not
-  where its ceiling is.
-- **The judge is still a language model.** It can be wrong in either direction. What I can claim
-  is that it is independent and has to point at evidence, not that it is right.
-- **The judge rejected nothing on my run.** The actor never overclaimed on this benchmark, so I
-  have no live example of the rejection path firing on real actor output. That path has unit
-  tests, and the mismatched-report audit is the closest thing I have to live evidence that the
-  judge discriminates. Getting a real overclaim rate needs a harder benchmark than mine.
-- **Actor and judge ended up on the same base model.** Free tier quotas forced it. The separation
-  that does the work here is informational rather than architectural, since the judge still
-  cannot see the actor's reasoning, and the audit is what tests whether that holds. Fixing it is
-  one flag if you have credit.
-- **The acting and the judging happened in two passes.** The benchmark run drove the browser and
-  saved evidence, then the judging model hit its daily quota partway through, so I finished the
-  verdicts afterwards with `arbiter rejudge --all` over the exact evidence the run had captured.
-  No actor output was regenerated and no browser was re-driven. It turned out to be a decent
-  advertisement for keeping evidence durable, but it was not the plan.
-- **Ten reports is small.** The percentages have wide error bars. The infrastructure scales to
-  more cases, writing the cases is the actual work.
-- **The overlap signal is the noisiest of the three.** You can see it in the published report: on
-  `drawer-jank` the DOM oracle reports the open drawer covering the button behind it, which is
-  what an open drawer is supposed to do. Backdrops covering more than 60% of the viewport are
-  already excluded, but a partial overlay still trips it. It never changed a verdict, because the
-  judge weighs signals against the report rather than treating any one of them as proof, but it
-  is a false signal source and a stricter rule is on my list.
-- **No cross-origin or login flows.** Out of scope, same limitation the Android papers report.
-- **The cost figures use paid-tier prices** from Google's pricing page as of 2026-08-02, even
-  though I ran it on the free tier. The token counts come from the API usage data and are exact.
-  The dollar number is what that traffic would have cost if I had been billed.
+Everything above the driver is browser agnostic. `Driver` is five methods and a `url` property, so
+an adb and UIAutomator2 version would let all three oracles run on Android unchanged.
 
-## What I would do next
+## Tests
 
-The obvious one is to stop planting bugs and point it at real GitHub issues from a live
-open-source web app. That is where the judge would finally get a chance to reject something, and
-where the reproduction rate would mean a lot more than it does here. After that, tightening the
-overlap rule, and emitting a replayable test script for every confirmed reproduction so the
-output is a regression test rather than a log.
+```bash
+pytest
+```
 
-## Where the idea came from
+| file | tests | what it pins down |
+|---|---|---|
+| `test_judge_isolation.py` | 4 | the judge payload has no parameter that could carry the actor's verdict, and a sentinel string from the actor never reaches the rendered text |
+| `test_visual_oracle.py` | 6 | a smooth slide is not jank, a stepped one is, and a single instant change is neither |
+| `test_dom_oracle.py` | 8 | overlap ignores ancestors, wrappers and full screen backdrops, and still catches a bar covering a card |
+| `test_cost_and_stats.py` | 11 | the combine matrix, the majority rule, retry backoff and the quota circuit breaker |
+| `test_actions.py` | 10 | the parser rejects unknown actions, missing arguments and bad verdicts, and clamps `wait` |
+| `test_pipeline_offline.py` | 3 | one full trial end to end, including the path where the judge rejects the actor's claim |
+| `test_suite_offline.py` | 2 | the whole suite scores correctly, and a confirmed reproduction on a control is counted as a false positive |
 
-- Wang, Zhao, Feng, Zhang, Halfond, Chen, Sun, Shi and Yu, *Feedback-Driven Automated Whole Bug
-  Report Reproduction for Android Apps* (ReBL), ISSTA 2024. The section on why their
-  reproductions failed is what pointed me at the two gaps I went after: UI elements the
-  accessibility hierarchy cannot see, and non-crash symptoms subtle enough that an agent declares
-  success without ever having looked at them.
-- Feng and Chen, *Prompting Is All You Need: Automated Android Bug Replay with Large Language
-  Models* (AdbGPT), ICSE 2024.
-- Just, Jalali and Ernst, *Defects4J*, ISSTA 2014, for how seeded-bug benchmarks are normally
-  built.
+## License and stack
 
-Those are Android, this is web, so none of my numbers should be read against theirs. They shaped
-the design, they are not baselines.
-
-## License
-
-MIT, see [LICENSE](LICENSE).
+Python 3.9 or newer, Playwright, OpenCV, NumPy, Pillow. MIT, see [LICENSE](LICENSE).
