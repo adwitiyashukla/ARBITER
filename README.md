@@ -12,37 +12,6 @@ one's word for it.
 There is a live demo at https://huggingface.co/spaces/adwitiyashukla/ARBITER that needs no install
 and no API key, and the full report from my run is at https://adwitiyashukla.github.io/ARBITER/.
 
-## Why I did not build the obvious version
-
-The obvious version of this is one agent that reads the steps, clicks through them, and tells you
-whether it worked. It demos well. I think it measures almost nothing.
-
-I got into this after reading about automated bug reproduction online, and I kept getting stuck on
-the same thing in everything I read. The agent doing the clicking is also the thing that decides
-whether the clicking worked. It follows the steps in the report, nothing explodes, and it says
-"reproduced". But following the steps and actually seeing the bug are two different things, and
-there is nothing in that setup that can tell them apart. The usual answer is that someone goes
-through the results by hand afterwards, which is the right thing to do, and it does not scale, and
-it is not something the system does for you.
-
-The ReBL paper from ISSTA 2024 is where I read the most about this. Its section on why their
-reproductions failed is what pointed me at the two gaps I went after: UI elements the accessibility
-tree cannot see, and symptoms subtle enough that an agent declares success without ever having
-looked at them. AdbGPT from ICSE 2024 sits in the same space. Both are Android and this is web, so
-none of my numbers should be read against theirs. They shaped the design, they are not baselines.
-
-So I built it the other way round. The checking is a separate component that only ever sees
-evidence, and I wanted to find out what falls out of that.
-
-Two other things bothered me about how these systems get scored:
-
-- They run each report once. One successful run is not reproduction, it is one sample.
-- They only test reports that are true. Nobody checks what happens when you hand the agent a report
-  describing a bug that is not there, which happens constantly on real issue trackers.
-
-So every report runs several times and I report how often it worked, and two of the ten reports in
-my benchmark are wrong on purpose.
-
 ## How the two halves work
 
 ```mermaid
@@ -146,7 +115,8 @@ it.
 Ten bug reports against ten small web apps that I wrote, served from a local static server so the
 whole thing runs offline and cannot break because some website changed. Each app has exactly one
 planted defect. The agent never sees the source, only the rendered DOM, the screenshots and the
-issue text.
+issue text. Every report runs several times, because one successful run is a sample rather than a
+reproduction, and two of the ten reports are wrong on purpose.
 
 | report | category | what is wrong | ground truth |
 |---|---|---|---|
@@ -266,52 +236,6 @@ that still counts as a refusal, because the only wrong answer would have been RE
 The judge is a language model and it can be wrong in either direction. What I can claim is that it
 is independent and has to point at specific evidence, not that it is right.
 
-## Things I got wrong
-
-Three are worth writing up.
-
-### The judge could read the actor's conclusion
-
-The whole thing falls apart if the actor's opinion leaks into the judge's prompt, so I wrote a test
-for it in `tests/test_judge_isolation.py`. It checks two things: that the function which builds the
-judge's payload has no parameter that could even carry the actor's verdict, and that a sentinel
-string from the actor never shows up in the rendered text.
-
-It failed the first time I ran it. The actor ends its run with a `finish` action, and that action
-carries its verdict and its written reason as arguments, and I was passing the whole action log to
-the judge. So the judge could read the actor's conclusion in the action list. The core claim of the
-project had a hole in it about an hour after I wrote the core of the project. `finish` is now
-stripped from everything the judge sees, and the test is in CI so it stays that way.
-
-### My jank detector called every instant update a bug
-
-My first version of the visual oracle only asked whether the pixel change was concentrated in a
-couple of frames. That is true of a janky animation, and it is also true of a button that just
-swaps some text, because a single instant update puts 100 percent of the change into one frame.
-So the oracle fired on almost every action and the signal was worthless.
-
-The fix was to separate the two cases explicitly. One frame moving is an instant change and is not
-reported. Two or more frames moving with the change concentrated in the busiest two, and with most
-frame pairs sitting still, is a stepped animation. `test_visual_oracle.py` now pins all three cases
-down, including the one asserting that a smooth slide is not flagged, because a jank detector that
-cries wolf on every update is worse than not having one.
-
-### The report page was broken for everyone except me
-
-My published report renders 20 screenshots of the evidence each verdict was based on, and locally
-it looked perfect. It was broken on GitHub Pages for two weeks and I did not notice.
-
-The cause was one missing character in `.gitignore`. I had written `evidence/` to keep the large
-local run output out of the repository. Git matches a pattern like that at any depth, so it also
-silently excluded `docs/evidence/`, which is the small published subset the report actually points
-at. The images were never committed. Everything looked right on my machine because the files were
-sitting there on disk.
-
-I only caught it by comparing what the report references against what `git ls-files` actually
-tracks, rather than by opening the page. The pattern is now anchored as `/evidence/`, and the
-lesson I took is that checking the artifact you published is a different job from checking the
-artifact you built.
-
 ## Running it
 
 ```bash
@@ -407,22 +331,6 @@ traces/         every recorded model exchange, for offline replay
 
 Everything above the driver is browser agnostic. `Driver` is five methods and a `url` property, so
 an adb and UIAutomator2 version would let all three oracles run on Android unchanged.
-
-## Tests
-
-```bash
-pytest
-```
-
-| file | tests | what it pins down |
-|---|---|---|
-| `test_judge_isolation.py` | 4 | the judge payload has no parameter that could carry the actor's verdict, and a sentinel string from the actor never reaches the rendered text |
-| `test_visual_oracle.py` | 6 | a smooth slide is not jank, a stepped one is, and a single instant change is neither |
-| `test_dom_oracle.py` | 8 | overlap ignores ancestors, wrappers and full screen backdrops, and still catches a bar covering a card |
-| `test_cost_and_stats.py` | 11 | the combine matrix, the majority rule, retry backoff and the quota circuit breaker |
-| `test_actions.py` | 10 | the parser rejects unknown actions, missing arguments and bad verdicts, and clamps `wait` |
-| `test_pipeline_offline.py` | 3 | one full trial end to end, including the path where the judge rejects the actor's claim |
-| `test_suite_offline.py` | 2 | the whole suite scores correctly, and a confirmed reproduction on a control is counted as a false positive |
 
 ## License and stack
 
